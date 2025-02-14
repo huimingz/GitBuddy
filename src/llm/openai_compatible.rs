@@ -5,9 +5,9 @@ use anyhow::{anyhow, Result};
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
-use std::io::{BufRead, BufReader};
+use std::io;
+use std::io::{BufRead, BufReader, Write};
 use std::time::Duration;
-use toml::Value::String;
 
 #[derive(Debug)]
 pub(crate) struct OpenAICompatible {
@@ -17,7 +17,30 @@ pub(crate) struct OpenAICompatible {
     pub(crate) api_key: String,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Default)]
+struct OpenAIStreamResponse {
+    id: String,
+    model: String, // 生成该 completion 的模型名
+    object: String,
+    system_fingerprint: String, // This fingerprint represents the backend configuration that the model runs with.
+    choices: Vec<OpenAIStreamChoice>,
+    created: i64, // 创建聊天完成时的 Unix 时间戳（以秒为单位）
+}
+
+#[derive(Debug, Serialize, Deserialize, Default)]
+struct OpenAIStreamChoice {
+    index: i64,
+    delta: OpenAIChoiceDelta,
+    finish_reason: Option<String>, // 模型停止生成 token 的原因:stop/length/content_filter
+}
+
+#[derive(Debug, Serialize, Deserialize, Default)]
+struct OpenAIChoiceDelta {
+    role: String,
+    content: String,
+}
+
+#[derive(Debug, Serialize, Deserialize, Default)]
 struct OpenAIResponse {
     id: String,
     model: String, // 生成该 completion 的模型名
@@ -41,7 +64,7 @@ struct OpenAIResponseChoiceMessage {
     content: String,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Default)]
 struct OpenAIResponseUsage {
     completion_tokens: i64,
     prompt_tokens: i64,
@@ -57,14 +80,14 @@ struct Message {
 }
 
 impl OpenAICompatible {
-    pub(crate) fn stream_request(
-        &self,
-        diff_content: &str,
-        option: ModelParameters,
-        prefix: Option<String>,
-    ) -> Result<LLMResult> {
-        let client = reqwest::blocking::Client::new();
-    }
+    // pub(crate) fn stream_request(
+    //     &self,
+    //     diff_content: &str,
+    //     option: ModelParameters,
+    //     prefix: Option<String>,
+    // ) -> Result<LLMResult> {
+    //     let client = reqwest::blocking::Client::new();
+    // }
 
     pub(crate) fn request(
         &self,
@@ -87,7 +110,6 @@ impl OpenAICompatible {
         ];
         if let Some(p) = prefix {
             println!("expect prefix: {p}");
-
             messages.push(Message {
                 role: String::from("user"),
                 content: format!("commit message must be prefix with: {p}"),
@@ -123,50 +145,75 @@ impl OpenAICompatible {
             .expect("Error sending request");
 
         return if response.status().is_success() {
+            let mut message = String::new();
             let reader = BufReader::new(response);
             let mut buffer = String::new();
+            println!("------------------------- Stream Start -------------------------");
             for line in reader.lines() {
                 let line = line?;
                 if line.starts_with("data: ") {
                     let payload = line.trim_start_matches("data: ");
-                    println!("收到事件流: {}", payload);
+                    if payload == "[DONE]" {
+                        break;
+                    }
+
+                    // println!("收到事件流: '{}'", payload);
+                    let data: OpenAIStreamResponse = serde_json::from_str(payload)?;
+                    for choice in data.choices {
+                        print!("{}", choice.delta.content);
+                        io::stdout().flush()?; // 强制刷新到终端
+                        message.push_str(choice.delta.content.as_str());
+                    }
                 }
             }
+            println!("------------------------- Stream End -------------------------");
 
-            let _response_json = OpenAIResponse {
-                id: "".to_string(),
-                model: "".to_string(),
-                object: "".to_string(),
-                system_fingerprint: "".to_string(),
-                choices: vec![],
-                usage: OpenAIResponseUsage {
-                    completion_tokens: 0,
-                    prompt_tokens: 0,
-                    total_tokens: 0,
-                },
-                created: 0,
-            };
-            let response_json: OpenAIResponse = response.json().expect("Failed to parse response as JSON");
-
-            if response_json.choices.is_empty() {
-                panic!("No choices returned from OpenAI API");
-            }
-            let choice = &response_json.choices[0];
-            let message = choice.message.content.clone().trim().to_owned();
             let re = Regex::new(r"(?s)<think>.*?</think>")
                 .map_err(|e| format!("invalid regex, err: {e}"))
                 .unwrap();
-            for cap in re.captures_iter(&message) {
-                println!("Think: {}\n------------------", &cap[0])
-            }
-            let message = re.replace_all(&message, "").trim().to_string();
+            let message = re.replace_all(&message.trim(), "").trim().to_string();
 
             Ok(LLMResult {
+                completion_tokens: -1,
+                prompt_tokens: -1,
+                total_tokens: -1,
                 commit_message: message,
-                total_tokens: response_json.usage.total_tokens,
-                prompt_tokens: response_json.usage.prompt_tokens,
-                completion_tokens: response_json.usage.completion_tokens,
             })
+
+            // let _response_json = OpenAIResponse {
+            //     id: "".to_string(),
+            //     model: "".to_string(),
+            //     object: "".to_string(),
+            //     system_fingerprint: "".to_string(),
+            //     choices: vec![],
+            //     usage: OpenAIResponseUsage {
+            //         completion_tokens: 0,
+            //         prompt_tokens: 0,
+            //         total_tokens: 0,
+            //     },
+            //     created: 0,
+            // };
+            // let response_json: OpenAIResponse = response.json().expect("Failed to parse response as JSON");
+            //
+            // if response_json.choices.is_empty() {
+            //     panic!("No choices returned from OpenAI API");
+            // }
+            // let choice = &response_json.choices[0];
+            // let message = choice.message.content.clone().trim().to_owned();
+            // let re = Regex::new(r"(?s)<think>.*?</think>")
+            //     .map_err(|e| format!("invalid regex, err: {e}"))
+            //     .unwrap();
+            // for cap in re.captures_iter(&message) {
+            //     println!("Think: {}\n------------------", &cap[0])
+            // }
+            // let message = re.replace_all(&message, "").trim().to_string();
+            //
+            // Ok(LLMResult {
+            //     commit_message: message,
+            //     total_tokens: response_json.usage.total_tokens,
+            //     prompt_tokens: response_json.usage.prompt_tokens,
+            //     completion_tokens: response_json.usage.completion_tokens,
+            // })
         } else {
             let status_code = response.status();
             let reason = match response.text() {
