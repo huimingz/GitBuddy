@@ -39,7 +39,7 @@ pub fn handler(
     println!("Generating commit message by LLM...");
 
     let start = Instant::now();
-    let llm_result = llm::llm_request(&diff_content, vendor, model, prompt, prefix).unwrap();
+    let llm_result = llm::llm_request(&diff_content, vendor, model, prompt, prefix).expect("request llm success");
     let duration = start.elapsed();
 
     let usage_message = format!(

@@ -64,7 +64,9 @@ pub fn llm_request(
 ) -> Result<LLMResult> {
     let config = config::get_config()?;
 
-    let (model_config, prompt_model) = config.model(vendor).unwrap();
+    let (model_config, prompt_model) = config
+        .model(vendor)
+        .expect("must load model config and prompt template");
 
     let model = model.unwrap_or(model_config.model.clone());
     println!("use model: {model}");
@@ -118,6 +120,6 @@ pub fn confirm_commit(commit_message: &str) -> Result<Confirm, &str> {
         "y" => Ok(Confirm::Ok),
         "n" => Ok(Confirm::Exit),
         "c" => Ok(Confirm::Retry),
-        _ => Err("Invalid Input!"),
+        _ => Ok(Confirm::Ok),
     }
 }

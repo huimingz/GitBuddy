@@ -79,7 +79,7 @@ impl OpenAICompatible {
 
             messages.push(Message {
                 role: String::from("user"),
-                content: format!("must be prefix with: {p}"),
+                content: format!("commit message must be prefix with: {p}"),
             })
         }
 
@@ -127,12 +127,17 @@ impl OpenAICompatible {
                 panic!("No choices returned from OpenAI API");
             }
             let choice = &response_json.choices[0];
-            let re = Regex::new(r"<think>.*?</think>").unwrap();
+            let message = choice.message.content.clone().trim().to_owned();
+            let re = Regex::new(r"(?s)<think>.*?</think>")
+                .map_err(|e| format!("invalid regex, err: {e}"))
+                .unwrap();
+            for cap in re.captures_iter(&message) {
+                println!("Think: {}\n------------------", &cap[0])
+            }
+            let message = re.replace_all(&message, "").into_owned().trim().to_string();
+
             Ok(LLMResult {
-                commit_message: re
-                    .replace_all(choice.message.content.clone().trim(), "")
-                    .trim()
-                    .to_string(),
+                commit_message: message,
                 total_tokens: response_json.usage.total_tokens,
                 prompt_tokens: response_json.usage.prompt_tokens,
                 completion_tokens: response_json.usage.completion_tokens,
@@ -144,7 +149,7 @@ impl OpenAICompatible {
                     return Err(anyhow!("Error: {:?}", e.to_string().truncate(100)));
                 }
             };
-            return Err(anyhow!("Error: {}", reason));
+            return Err(anyhow!("Error occurred in request, reason: {}", reason));
         };
     }
 }
