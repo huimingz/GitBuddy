@@ -2,6 +2,7 @@ use crate::config::ModelParameters;
 use crate::llm::LLMResult;
 use crate::prompt::Prompt;
 use anyhow::{anyhow, Result};
+use regex::Regex;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use std::time::Duration;
@@ -45,11 +46,42 @@ struct OpenAIResponseUsage {
     total_tokens: i64,
 }
 
+#[derive(Serialize, Deserialize)]
+struct Message {
+    #[serde(rename = "role")]
+    role: String,
+    #[serde(rename = "content")]
+    content: String,
+}
+
 impl OpenAICompatible {
-    pub(crate) fn request(&self, diff_content: &str, option: ModelParameters) -> Result<LLMResult> {
+    pub(crate) fn request(
+        &self,
+        diff_content: &str,
+        option: ModelParameters,
+        prefix: Option<String>,
+    ) -> Result<LLMResult> {
         let client = reqwest::blocking::Client::new();
 
         let api_key = self.api_key.clone();
+        let mut messages: Vec<Message> = vec![
+            Message {
+                role: String::from("system"),
+                content: self.prompt.clone(),
+            },
+            Message {
+                role: String::from("user"),
+                content: format!("diff content: \n{diff_content}"),
+            },
+        ];
+        if let Some(p) = prefix {
+            println!("expect prefix: {p}");
+
+            messages.push(Message {
+                role: String::from("user"),
+                content: format!("must be prefix with: {p}"),
+            })
+        }
 
         let response = client
             .post(format!("{}/v1/chat/completions", self.url))
@@ -57,16 +89,7 @@ impl OpenAICompatible {
             .header("Authorization", format!("Bearer {api_key}",))
             .json(&json!({
                 "model": &self.model,
-                "messages": [
-                    {
-                        "role": "system",
-                        "content": self.prompt,
-                    },
-                    {
-                        "role": "user",
-                        "content": format!("diff content: \n{diff_content}"),
-                    }
-                ],
+                "messages": messages,
                 "options": {
                     "temperature": option.temperature,
                     "top_p": option.top_p,
@@ -104,8 +127,12 @@ impl OpenAICompatible {
                 panic!("No choices returned from OpenAI API");
             }
             let choice = &response_json.choices[0];
+            let re = Regex::new(r"<think>.*?</think>").unwrap();
             Ok(LLMResult {
-                commit_message: choice.message.content.clone().trim().to_string(),
+                commit_message: re
+                    .replace_all(choice.message.content.clone().trim(), "")
+                    .trim()
+                    .to_string(),
                 total_tokens: response_json.usage.total_tokens,
                 prompt_tokens: response_json.usage.prompt_tokens,
                 completion_tokens: response_json.usage.completion_tokens,

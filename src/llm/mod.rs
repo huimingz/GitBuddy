@@ -60,6 +60,7 @@ pub fn llm_request(
     vendor: Option<PromptModel>,
     model: Option<String>,
     prompt: Prompt,
+    prefix: Option<String>,
 ) -> Result<LLMResult> {
     let config = config::get_config()?;
 
@@ -75,6 +76,7 @@ pub fn llm_request(
         diff_content,
         config.model_params(),
         prompt,
+        prefix,
     )
 }
 
@@ -85,25 +87,37 @@ fn get_commit_message(
     diff_content: &str,
     option: ModelParameters,
     prompt: Prompt,
+    prefix: Option<String>,
 ) -> Result<LLMResult> {
     let builder = OpenAICompatibleBuilder::new(vendor, model, api_key);
 
     // generate http request
     let m = builder.build(prompt.value().to_string());
-    let result = m.request(diff_content, option)?;
+    let result = m.request(diff_content, option, prefix)?;
     Ok(result)
 }
 
-pub fn confirm_commit(commit_message: &str) -> bool {
+pub enum Confirm {
+    Ok,
+    Retry,
+    Exit,
+}
+
+pub fn confirm_commit(commit_message: &str) -> Result<Confirm, &str> {
     println!("--------------------------------------");
     println!("{}", commit_message.cyan().bold());
     println!("--------------------------------------");
-    print!("Are you sure you want to commit? (Y/n) ");
+    print!("Are you sure you want to commit? (Y/n/c) ");
     let mut input = String::new();
 
     // flush
     std::io::stdout().flush().unwrap();
     std::io::stdin().read_line(&mut input).expect("Failed to read line");
 
-    return input.trim() == "y" || input.trim() == "Y" || input.trim() == "";
+    match input.trim().to_lowercase().as_str() {
+        "y" => Ok(Confirm::Ok),
+        "n" => Ok(Confirm::Exit),
+        "c" => Ok(Confirm::Retry),
+        _ => Err("Invalid Input!"),
+    }
 }

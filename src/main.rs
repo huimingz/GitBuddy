@@ -21,11 +21,14 @@ struct Cli {
     #[arg(long)]
     vendor: Option<PromptModel>,
 
-    #[arg(short, long)]
+    #[arg(short = 'm', long)]
     model: Option<String>,
 
-    #[arg(short='p', long, default_value_t=Prompt::P1)]
+    #[arg(long, default_value_t=Prompt::P1)]
     prompt: Prompt,
+
+    #[arg(short = 'p', long)]
+    prefix: Option<String>,
 }
 
 #[derive(Subcommand)]
@@ -60,7 +63,7 @@ fn main() {
             dry_run,
             // vendor,
         }) => {
-            ai::handler(*push, *dry_run, cli.vendor, cli.model, cli.prompt);
+            ai::handler(*push, *dry_run, cli.vendor, cli.model, cli.prompt, cli.prefix);
         }
         Some(Commands::Config { vendor, api_key, model }) => {
             let model = if let Some(model) = model {
@@ -71,6 +74,6 @@ fn main() {
 
             config::handler(vendor, api_key, model.as_str()).unwrap();
         }
-        None => ai::handler(false, false, cli.vendor, cli.model, cli.prompt),
+        None => ai::handler(false, false, cli.vendor, cli.model, cli.prompt, cli.prefix),
     }
 }

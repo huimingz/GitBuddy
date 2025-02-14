@@ -4,12 +4,19 @@ use colored::Colorize;
 
 use crate::ai::git::{git_stage_diff, git_stage_filenames};
 use crate::llm;
-use crate::llm::PromptModel;
+use crate::llm::{Confirm, PromptModel};
 use crate::prompt::Prompt;
 
 mod git;
 
-pub fn handler(push: bool, dry_run: bool, vendor: Option<PromptModel>, model: Option<String>, prompt: Prompt) {
+pub fn handler(
+    push: bool,
+    dry_run: bool,
+    vendor: Option<PromptModel>,
+    model: Option<String>,
+    prompt: Prompt,
+    prefix: Option<String>,
+) {
     if !is_git_directory() {
         println!("Not git directory");
         return;
@@ -32,7 +39,7 @@ pub fn handler(push: bool, dry_run: bool, vendor: Option<PromptModel>, model: Op
     println!("Generating commit message by LLM...");
 
     let start = Instant::now();
-    let llm_result = llm::llm_request(&diff_content, vendor, model, prompt).unwrap();
+    let llm_result = llm::llm_request(&diff_content, vendor, model, prompt, prefix).unwrap();
     let duration = start.elapsed();
 
     let usage_message = format!(
@@ -42,10 +49,13 @@ pub fn handler(push: bool, dry_run: bool, vendor: Option<PromptModel>, model: Op
 
     println!("{}  {}", "Completed!".green(), usage_message.truecolor(128, 128, 128));
 
-    if !llm::confirm_commit(llm_result.commit_message.as_str()) {
-        println!("{}", "Cancel commit".red());
-        return;
-    }
+    match llm::confirm_commit(llm_result.commit_message.as_str()).unwrap() {
+        Confirm::Retry | Confirm::Exit => {
+            println!("{}", "Cancel commit".red());
+            return;
+        }
+        _ => {}
+    };
 
     let result = git::git_commit(llm_result.commit_message.trim(), dry_run);
     match result {
