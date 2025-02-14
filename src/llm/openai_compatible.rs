@@ -36,7 +36,7 @@ struct OpenAIStreamChoice {
 
 #[derive(Debug, Serialize, Deserialize, Default)]
 struct OpenAIChoiceDelta {
-    role: String,
+    role: Option<String>,
     content: String,
 }
 
@@ -166,7 +166,7 @@ impl OpenAICompatible {
                     }
                 }
             }
-            println!("------------------------- Stream End -------------------------");
+            println!("\n------------------------- Stream End -------------------------\n");
 
             let re = Regex::new(r"(?s)<think>.*?</think>")
                 .map_err(|e| format!("invalid regex, err: {e}"))
