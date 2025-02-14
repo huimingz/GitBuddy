@@ -179,41 +179,6 @@ impl OpenAICompatible {
                 total_tokens: -1,
                 commit_message: message,
             })
-
-            // let _response_json = OpenAIResponse {
-            //     id: "".to_string(),
-            //     model: "".to_string(),
-            //     object: "".to_string(),
-            //     system_fingerprint: "".to_string(),
-            //     choices: vec![],
-            //     usage: OpenAIResponseUsage {
-            //         completion_tokens: 0,
-            //         prompt_tokens: 0,
-            //         total_tokens: 0,
-            //     },
-            //     created: 0,
-            // };
-            // let response_json: OpenAIResponse = response.json().expect("Failed to parse response as JSON");
-            //
-            // if response_json.choices.is_empty() {
-            //     panic!("No choices returned from OpenAI API");
-            // }
-            // let choice = &response_json.choices[0];
-            // let message = choice.message.content.clone().trim().to_owned();
-            // let re = Regex::new(r"(?s)<think>.*?</think>")
-            //     .map_err(|e| format!("invalid regex, err: {e}"))
-            //     .unwrap();
-            // for cap in re.captures_iter(&message) {
-            //     println!("Think: {}\n------------------", &cap[0])
-            // }
-            // let message = re.replace_all(&message, "").trim().to_string();
-            //
-            // Ok(LLMResult {
-            //     commit_message: message,
-            //     total_tokens: response_json.usage.total_tokens,
-            //     prompt_tokens: response_json.usage.prompt_tokens,
-            //     completion_tokens: response_json.usage.completion_tokens,
-            // })
         } else {
             let status_code = response.status();
             let reason = match response.text() {
