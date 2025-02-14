@@ -5,7 +5,9 @@ use anyhow::{anyhow, Result};
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
+use std::io::{BufRead, BufReader};
 use std::time::Duration;
+use toml::Value::String;
 
 #[derive(Debug)]
 pub(crate) struct OpenAICompatible {
@@ -55,6 +57,15 @@ struct Message {
 }
 
 impl OpenAICompatible {
+    pub(crate) fn stream_request(
+        &self,
+        diff_content: &str,
+        option: ModelParameters,
+        prefix: Option<String>,
+    ) -> Result<LLMResult> {
+        let client = reqwest::blocking::Client::new();
+    }
+
     pub(crate) fn request(
         &self,
         diff_content: &str,
@@ -83,9 +94,12 @@ impl OpenAICompatible {
             })
         }
 
+        let url = format!("{}/v1/chat/completions", self.url);
+        println!("Vendor Endpoint: {}", url);
         let response = client
-            .post(format!("{}/v1/chat/completions", self.url))
+            .post(url)
             .timeout(Duration::from_secs(120))
+            .header("Accept", "text/event-stream")
             .header("Authorization", format!("Bearer {api_key}",))
             .json(&json!({
                 "model": &self.model,
@@ -98,6 +112,7 @@ impl OpenAICompatible {
                 "options": option,
                 "keep_alive": "30m",
                 "max_tokens": option.max_tokens,
+                "stream": true,
                 // "format": {
                 //     "type": "object",
                 //     "properties": {"subject": {"type":"string"}, "scope": {"type":"string"}, "summary": {"type":"string"}},
@@ -108,6 +123,16 @@ impl OpenAICompatible {
             .expect("Error sending request");
 
         return if response.status().is_success() {
+            let reader = BufReader::new(response);
+            let mut buffer = String::new();
+            for line in reader.lines() {
+                let line = line?;
+                if line.starts_with("data: ") {
+                    let payload = line.trim_start_matches("data: ");
+                    println!("收到事件流: {}", payload);
+                }
+            }
+
             let _response_json = OpenAIResponse {
                 id: "".to_string(),
                 model: "".to_string(),
@@ -134,7 +159,7 @@ impl OpenAICompatible {
             for cap in re.captures_iter(&message) {
                 println!("Think: {}\n------------------", &cap[0])
             }
-            let message = re.replace_all(&message, "").into_owned().trim().to_string();
+            let message = re.replace_all(&message, "").trim().to_string();
 
             Ok(LLMResult {
                 commit_message: message,
@@ -143,13 +168,18 @@ impl OpenAICompatible {
                 completion_tokens: response_json.usage.completion_tokens,
             })
         } else {
+            let status_code = response.status();
             let reason = match response.text() {
                 Ok(text) => text,
                 Err(e) => {
                     return Err(anyhow!("Error: {:?}", e.to_string().truncate(100)));
                 }
             };
-            return Err(anyhow!("Error occurred in request, reason: {}", reason));
+            return Err(anyhow!(
+                "Error occurred in request, reason: '{}', status code: {}",
+                reason,
+                status_code
+            ));
         };
     }
 }
