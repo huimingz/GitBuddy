@@ -106,9 +106,9 @@ pub enum Confirm {
 }
 
 pub fn confirm_commit(commit_message: &str) -> Result<Confirm, &str> {
-    println!("--------------------------------------");
+    println!("------------------- Commit Message ------------------");
     println!("{}", commit_message.cyan().bold());
-    println!("--------------------------------------");
+    println!("-----------------------------------------------------");
     print!("Are you sure you want to commit? (Y/n/c) ");
     let mut input = String::new();
 
