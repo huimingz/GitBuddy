@@ -136,7 +136,7 @@ impl OpenAICompatible {
         return if response.status().is_success() {
             let mut message = String::new();
             let reader = BufReader::new(response);
-            let (start_separator, end_separator) = get_stream_separator(2); // 使用方案2，可以改为1或3尝试其他效果
+            let (start_separator, end_separator) = get_stream_separator(3); // 使用方案2，可以改为1或3尝试其他效果
             println!("\n{}\n", start_separator);
             for line in reader.lines() {
                 let line = line?;

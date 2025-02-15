@@ -9,6 +9,32 @@ use crate::prompt::Prompt;
 
 mod git;
 
+fn get_stats_separator() -> (String, String) {
+    (
+        format!("{} {} {}",
+            "📊".bright_cyan(),
+            "Stats Dashboard".bright_cyan().bold(),
+            "━".repeat(30).bright_cyan()
+        ),
+        format!("{} {} {}",
+            "📈".bright_cyan(),
+            "End of Stats".bright_cyan().bold(),
+            "━".repeat(33).bright_cyan()
+        )
+    )
+}
+
+fn format_stat(label: &str, value: i64, emoji: &str) -> Option<String> {
+    if value <= 0 {
+        return None;
+    }
+    Some(format!("{} {}: {}",
+        emoji.bright_yellow(),
+        label.bright_cyan(),
+        value.to_string().bright_green().bold()
+    ))
+}
+
 pub fn handler(
     push: bool,
     dry_run: bool,
@@ -42,12 +68,29 @@ pub fn handler(
     let llm_result = llm::llm_request(&diff_content, vendor, model, prompt, prefix).expect("request llm success");
     let duration = start.elapsed();
 
-    let usage_message = format!(
-        "duration={:?} - Usage={}(completion={}, prompt={})]",
-        duration, llm_result.total_tokens, llm_result.completion_tokens, llm_result.prompt_tokens
-    );
+    let (header, footer) = get_stats_separator();
+    println!("\n{}", header);
 
-    println!("{}  {}", "Completed!".green(), usage_message.truecolor(128, 128, 128));
+    let mut stats = Vec::new();
+    if let Some(stat) = format_stat("Duration", duration.as_millis() as i64, "⏱️") {
+        stats.push(stat);
+    }
+    if let Some(stat) = format_stat("Usage", llm_result.total_tokens, "💰") {
+        stats.push(stat);
+    }
+    if let Some(stat) = format_stat("Completion", llm_result.completion_tokens, "🎯") {
+        stats.push(stat);
+    }
+    if let Some(stat) = format_stat("Prompt Tokens", llm_result.prompt_tokens, "🔤") {
+        stats.push(stat);
+    }
+
+    if !stats.is_empty() {
+        for stat in stats {
+            println!("  {}", stat);
+        }
+        println!("{}\n", footer);
+    }
 
     let confirm = llm::confirm_commit(&llm_result, llm_result.commit_message.as_str()).unwrap();
 
