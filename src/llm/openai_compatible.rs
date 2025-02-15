@@ -85,7 +85,7 @@ impl OpenAICompatible {
         diff_content: &str,
         option: ModelParameters,
         prefix: Option<String>,
-    ) -> Result<LLMResult> {
+    ) -> Result<LLMResult, anyhow::Error> {
         let client = reqwest::blocking::Client::new();
 
         let api_key = self.api_key.clone();
@@ -157,7 +157,7 @@ impl OpenAICompatible {
                 .map_err(|e| format!("invalid regex, err: {e}"))
                 .unwrap();
             let message = re.replace_all(&message.trim(), "").trim().to_string();
-            let messages = process_llm_response(message.clone());
+            let messages = process_llm_response(message.clone())?;
 
             Ok(LLMResult {
                 completion_tokens: -1,
@@ -267,7 +267,7 @@ fn extract_json_content(text: &str) -> String {
     text.to_string()
 }
 
-fn process_llm_response(response: String) -> Result<Vec<String>, &'static str> {
+fn process_llm_response(response: String) -> Result<Vec<String>> {
     // 首先尝试提取代码块内容
     let content = extract_json_content(&response);
 
@@ -303,7 +303,8 @@ fn process_llm_response(response: String) -> Result<Vec<String>, &'static str> {
             })
             .collect()),
         Err(e) => {
-            Err("Parse JSON error: {e}")
+            println!("Parse JSON failed: {}", e);
+            Err(anyhow::anyhow!("Parse JSON failed: {}", e))
             //  // 如果 JSON 解析失败，回退到原始的分隔符处理方式
             //  response
             //  .replace("---", "===")
@@ -314,7 +315,6 @@ fn process_llm_response(response: String) -> Result<Vec<String>, &'static str> {
             //  .map(|s| s.trim().to_string())
             //  .filter(|s| !s.is_empty())
             //  .collect()
-
         }
     }
 }
