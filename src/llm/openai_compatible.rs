@@ -107,7 +107,6 @@ impl OpenAICompatible {
             })
         }
         let url = format!("{}/v1/chat/completions", self.url);
-
         self.print_configuration(diff_content, &option, &url);
 
         let response = client
