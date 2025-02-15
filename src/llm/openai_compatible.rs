@@ -267,7 +267,7 @@ fn extract_json_content(text: &str) -> String {
     text.to_string()
 }
 
-fn process_llm_response(response: String) -> Vec<String> {
+fn process_llm_response(response: String) -> Result<Vec<String>, &'static str> {
     // 首先尝试提取代码块内容
     let content = extract_json_content(&response);
 
@@ -275,7 +275,7 @@ fn process_llm_response(response: String) -> Vec<String> {
     let fixed_json = fix_json_response(&content);
 
     match serde_json::from_str::<Vec<CommitMessage>>(&fixed_json) {
-        Ok(messages) => messages
+        Ok(messages) => Ok(messages
             .into_iter()
             .map(|msg| {
                 let mut commit = String::new();
@@ -301,18 +301,20 @@ fn process_llm_response(response: String) -> Vec<String> {
 
                 commit
             })
-            .collect(),
-        Err(_) => {
-            // 如果 JSON 解析失败，回退到原始的分隔符处理方式
-            response
-                .replace("---", "===")
-                .replace("___", "===")
-                .replace("***", "===")
-                .replace("```", "")
-                .split("===")
-                .map(|s| s.trim().to_string())
-                .filter(|s| !s.is_empty())
-                .collect()
+            .collect()),
+        Err(e) => {
+            Err("Parse JSON error: {e}")
+            //  // 如果 JSON 解析失败，回退到原始的分隔符处理方式
+            //  response
+            //  .replace("---", "===")
+            //  .replace("___", "===")
+            //  .replace("***", "===")
+            //  .replace("```", "")
+            //  .split("===")
+            //  .map(|s| s.trim().to_string())
+            //  .filter(|s| !s.is_empty())
+            //  .collect()
+
         }
     }
 }
