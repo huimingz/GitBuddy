@@ -38,6 +38,7 @@ impl PromptModel {
 #[derive(Debug)]
 pub struct LLMResult {
     pub commit_message: String,
+    pub commit_messages: Vec<String>,
     pub completion_tokens: i64,
     pub prompt_tokens: i64,
     pub total_tokens: i64,
@@ -82,6 +83,7 @@ pub fn llm_request(
     )
 }
 
+
 fn get_commit_message(
     vendor: PromptModel,
     model: &str,
@@ -99,27 +101,55 @@ fn get_commit_message(
     Ok(result)
 }
 
-pub enum Confirm {
-    Ok,
+pub enum Confirm<'a> {
+    Ok(&'a String),
     Retry,
     Exit,
 }
 
-pub fn confirm_commit(commit_message: &str) -> Result<Confirm, &str> {
+pub fn confirm_commit<'a>(result: &'a LLMResult, _commit_message: &'a str) -> Result<Confirm<'a>, &'static str> {
     println!("----------------------- Commit Message -----------------------");
-    println!("{}", commit_message.cyan().bold());
+    for (idx, message) in result.commit_messages.iter().enumerate() {
+        if idx < result.commit_messages.len() - 1 {
+            println!(
+                "{}\n{}\n",
+                format!("Option {}:", idx + 1).bold().bright_cyan(),
+                message.cyan()
+            );
+        } else {
+            println!(
+                "{}\n{}",
+                format!("Option {}:", idx + 1).bold().bright_cyan(),
+                message.cyan()
+            );
+        }
+    }
     println!("--------------------------------------------------------------");
-    print!("Are you sure you want to commit? (Y/n/c) ");
+    print!(
+        "Choose a commit message (1-{}, default: 1, n: cancel, c: customize): ",
+        result.commit_messages.len()
+    );
     let mut input = String::new();
 
     // flush
-    std::io::stdout().flush().unwrap();
+    std::io::stdout().flush().expect("Failed to flush stdout");
     std::io::stdin().read_line(&mut input).expect("Failed to read line");
 
-    match input.trim().to_lowercase().as_str() {
-        "y" => Ok(Confirm::Ok),
+    let input = input.trim().to_lowercase();
+    match input.as_str() {
+        "" => Ok(Confirm::Ok(&result.commit_messages[0])),
         "n" => Ok(Confirm::Exit),
         "c" => Ok(Confirm::Retry),
-        _ => Ok(Confirm::Ok),
+        num => {
+            if let Ok(choice) = num.parse::<usize>() {
+                if choice > 0 && choice <= result.commit_messages.len() {
+                    Ok(Confirm::Ok(&result.commit_messages[choice - 1]))
+                } else {
+                    Err("Invalid input choice")
+                }
+            } else {
+                Err("Input must be a number")
+            }
+        }
     }
 }

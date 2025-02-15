@@ -34,7 +34,7 @@ impl Prompt {
     }
 }
 
-pub const PROMPT: &str = r###"Generate exactly 3 commit messages based on the code changes. Use only '===' as separator.
+pub const PROMPT: &str = r###"Generate 3 to 5 commit messages based on the code changes. Use only '===' as separator.
 
 Format for each message object:
 {
@@ -51,7 +51,12 @@ Rules:
 3. Order from specific to general
 4. Always include scope when possible to identify affected components
 5. Always include body to explain the change's motivation and impact
-6. Wrap response in ```json
+6. Response MUST be valid JSON array with 3-5 messages
+7. Wrap response in ```json
+8. String values MUST be properly escaped:
+   - Use \" for quotes
+   - Use \n for newlines
+   - No trailing commas in arrays/objects
 
 Example:
 ```json
@@ -60,7 +65,7 @@ Example:
     "type": "feat",
     "scope": "auth",
     "subject": "add JWT-based authentication",
-    "body": "Implement secure user authentication using JWT tokens to protect API endpoints and manage user sessions",
+    "body": "Implement secure user authentication using JWT tokens\nto protect API endpoints and manage user sessions",
     "footer": null
   },
   {
