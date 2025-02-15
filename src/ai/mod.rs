@@ -17,6 +17,14 @@ fn get_stats_separator() -> String {
     )
 }
 
+fn get_command_message() -> String {
+    format!("\n{}  {}  {}", 
+        "🎯".bright_yellow(),
+        "Initializing AI Assistant".bright_cyan().bold(),
+        "⚡".bright_yellow()
+    )
+}
+
 fn format_stat(label: &str, value: i64, emoji: &str) -> Option<String> {
     if value <= 0 {
         return None;
@@ -35,27 +43,27 @@ pub fn handler(
     model: Option<String>,
     prompt: Prompt,
     prefix: Option<String>,
-) {
+) -> Result<(), Box<dyn std::error::Error>> {
     if !is_git_directory() {
         println!("Not git directory");
-        return;
+        return Ok(());
     }
 
     if !is_git_installed() {
         println!("Please install git");
-        return;
+        return Ok(());
     }
 
     let filenames = git_stage_filenames();
     if filenames.is_empty() {
         println!("No files added to staging! Did you forget to run `git add` ?");
-        return;
+        return Ok(());
     }
 
     let diff_content = git_stage_diff();
     // let diff_content = format!("Code changes: \n```\n{}\n```", git_stage_diff());
 
-    println!("Generating commit message by LLM...");
+    println!("{}", get_command_message());
 
     let start = Instant::now();
     let llm_result = llm::llm_request(&diff_content, vendor, model, prompt, prefix).expect("request llm success");
@@ -115,6 +123,8 @@ pub fn handler(
             }
         }
     }
+
+    Ok(())
 }
 
 fn is_git_directory() -> bool {
