@@ -13,10 +13,10 @@ commit messages, streamline your workflow, and enhance your productivity.
 - **AI-Powered Commit Messages**: Generate intelligent and context-aware commit messages based on your code changes.
 - **Conventional Commits Support**: Automatically formats commit messages following the Conventional Commits specification.
 - **Multiple Commit Options**: Provides 3-5 commit message suggestions for you to choose from.
-- **Beautiful CLI Interface**: 
-  - Multiple separator themes for a personalized experience
-  - Colorful output with emojis
-  - Enhanced statistics and configuration display
+- **Beautiful CLI Interface**:
+    - Multiple separator themes for a personalized experience
+    - Colorful output with emojis
+    - Enhanced statistics and configuration display
 - **Customizable Models**: Support for using different AI models, not only GPT-3.5.
 - **Multiple Vendor Flexibility**: Compatible with various AI service providers.
 - **Proxy Support**: Easily configure proxy settings for network-restricted environments.
@@ -29,7 +29,7 @@ commit messages, streamline your workflow, and enhance your productivity.
 To get started with GitBuddy, follow these simple steps:
 
 ```sh
-cargo install gitbuddy
+cargo install --git https://github.com/huimingz/GitBuddy.git
 ```
 
 ### Configuration
@@ -37,11 +37,13 @@ cargo install gitbuddy
 To use GitBuddy, simply run the following command in your terminal:
 
 **Using default model**
+
 ```sh
 gitbuddy config --api-key <your-api-key> deepseek
 ```
 
 **Using custom model**
+
 ```sh
 gitbuddy config --api-key <your-api-key> --model gpt-4 openai
 ```
@@ -67,6 +69,7 @@ GitBuddy follows the [Conventional Commits](https://www.conventionalcommits.org/
 ```
 
 Where `type` can be:
+
 - feat: A new feature
 - fix: A bug fix
 - docs: Documentation changes
@@ -90,9 +93,9 @@ Where `type` can be:
 ## Roadmap
 
 - [x] Enhance the User Interface
-  - [x] Add multiple separator themes
-  - [x] Implement colorful output with emojis
-  - [x] Improve statistics and configuration display
+    - [x] Add multiple separator themes
+    - [x] Implement colorful output with emojis
+    - [x] Improve statistics and configuration display
 - [x] Using configuration file instead of environment variables
 - [x] Implement Conventional Commits support
 - [x] Add multiple commit message suggestions
