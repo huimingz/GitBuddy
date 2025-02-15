@@ -223,7 +223,7 @@ pub enum Confirm<'a> {
 
 pub fn confirm_commit<'a>(result: &'a LLMResult, _commit_message: &'a str) -> Result<Confirm<'a>, &'static str> {
     let (header, prefix, footer) = get_commit_separator(5);
-    println!("\n{}\n", header);
+    println!("{}", header);
     for (idx, message) in result.commit_messages.iter().enumerate() {
         if idx < result.commit_messages.len() - 1 {
             println!(
