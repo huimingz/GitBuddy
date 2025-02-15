@@ -34,28 +34,41 @@ impl Prompt {
     }
 }
 
-pub const PROMPT: &str = r###"Generate 3 to 5 commit messages based on the code changes.
+pub const PROMPT: &str = r###"Generate 3 to 5 commit messages following the Conventional Commits specification (https://www.conventionalcommits.org/).
 
 Format for each message object:
 {
-  "type": "<type>",
-  "scope": "<module or component name>",  // Always try to identify the affected scope
-  "subject": "<concise change description>",
-  "body": "<detailed explanation>",       // Explain the motivation and impact
-  "footer": "<optional footer>"
+  "type": "<type>",                      // Type of change (see rules below)
+  "scope": "<module or component name>",  // Affected component in parentheses
+  "subject": "<concise description>",     // Imperative mood, no capitalization, no period
+  "body": "<detailed explanation>",       // Why the change was made, what changed
+  "footer": "<optional footer>"           // Breaking changes, references
 }
 
-Rules:
-1. Type: fix|feat|docs|style|refactor|test|chore|ci
-2. Subject: max 80 chars
-3. Order from specific to general
-4. Always include scope when possible to identify affected components
-5. Always include body to explain the change's motivation and impact
-6. Response MUST be valid JSON array with 3-5 messages
-7. Wrap response in ```json
-8. String values MUST be properly escaped:
-   - Use \" for quotes
-   - Use \n for newlines
+Rules for Conventional Commits:
+1. Type MUST be one of:
+   - feat: A new feature
+   - fix: A bug fix
+   - docs: Documentation only changes
+   - style: Changes that do not affect the meaning of the code
+   - refactor: A code change that neither fixes a bug nor adds a feature
+   - test: Adding missing tests or correcting existing tests
+   - chore: Changes to the build process or auxiliary tools
+   - ci: Changes to CI configuration files and scripts
+
+2. Format Requirements:
+   - Subject MUST be in imperative mood ("add" not "adds" or "added")
+   - Subject MUST NOT start with a capital letter
+   - Subject MUST NOT end with a period
+   - Subject MUST be max 80 characters
+   - Body MUST explain both motivation and changes made
+   - Breaking changes MUST be indicated in footer
+
+3. Technical Requirements:
+   - Response MUST be valid JSON array with 3-5 messages
+   - Wrap response in ```json
+   - Use \" for quotes in strings
+   - Use \n for newlines in strings
    - No trailing commas in arrays/objects
 
 Example:
@@ -64,22 +77,22 @@ Example:
   {
     "type": "feat",
     "scope": "auth",
-    "subject": "add JWT-based authentication",
-    "body": "Implement secure user authentication using JWT tokens to protect API endpoints and manage user sessions",
+    "subject": "add oauth2 authentication flow",
+    "body": "implement secure authentication using OAuth2 protocol\n- add login endpoint\n- integrate with external providers\n- handle token refresh",
+    "footer": "BREAKING CHANGE: authentication header format changed"
+  },
+  {
+    "type": "fix",
+    "scope": "api",
+    "subject": "handle null response in user profile",
+    "body": "add null checks to prevent app crash when user profile is incomplete",
     "footer": null
   },
   {
     "type": "refactor",
-    "scope": "database",
-    "subject": "optimize query performance",
-    "body": "Improve database query efficiency by adding proper indexes and optimizing join operations",
-    "footer": null
-  },
-  {
-    "type": "docs",
-    "scope": "api",
-    "subject": "update API documentation",
-    "body": "Add detailed examples and improve clarity of API endpoint descriptions",
+    "scope": "core",
+    "subject": "simplify error handling logic",
+    "body": "centralize error handling to reduce code duplication and improve maintainability",
     "footer": null
   }
 ]
