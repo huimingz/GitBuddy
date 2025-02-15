@@ -34,7 +34,7 @@ impl Prompt {
     }
 }
 
-pub const PROMPT: &str = r###"Generate 3 to 5 commit messages based on the code changes. Use only '===' as separator.
+pub const PROMPT: &str = r###"Generate 3 to 5 commit messages based on the code changes.
 
 Format for each message object:
 {
