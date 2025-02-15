@@ -185,37 +185,37 @@ impl OpenAICompatible {
     fn print_configuration(&self, diff_content: &str, option: &ModelParameters, url: &String) {
         println!(
             "\n{} {} {}",
-            "🤖".bright_cyan(),
+            "⚙️".bright_cyan(),
             "LLM Configuration".bright_cyan().bold(),
-            "⚙️".bright_cyan()
+            "🔮".bright_cyan()
         );
         println!("  {} Model: {}", "🚀".bright_yellow(), self.model.bright_green().bold());
         println!(
             "  {} Max Tokens: {}",
-            "📊".bright_yellow(),
+            "⚡".bright_yellow(),
             option.max_tokens.to_string().bright_green().bold()
         );
         println!(
             "  {} Temperature: {}",
-            "🌡️".bright_yellow(),
+            "🎲".bright_yellow(),
             option.temperature.to_string().bright_green().bold()
         );
         println!(
             "  {} Top P: {}",
-            "🎲".bright_yellow(),
+            "🎯".bright_yellow(),
             option.top_p.to_string().bright_green().bold()
         );
         println!(
             "  {} Diff Length: {} chars",
-            "📝".bright_yellow(),
+            "📏".bright_yellow(),
             diff_content.len().to_string().bright_green().bold()
         );
         println!(
             "  {} Diff Lines: {} lines",
-            "📋".bright_yellow(),
+            "📑".bright_yellow(),
             diff_content.lines().count().to_string().bright_green().bold()
         );
-        println!("  {} Endpoint: {}\n", "🔗".bright_yellow(), url.bright_green());
+        println!("  {} Endpoint: {}\n", "🌐".bright_yellow(), url.bright_green());
     }
 }
 
