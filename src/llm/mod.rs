@@ -45,18 +45,6 @@ pub struct LLMResult {
     pub total_tokens: i64,
 }
 
-struct RequestsWrap {
-    vendor: PromptModel,
-    model: String,
-    api_key: String,
-}
-
-impl RequestsWrap {
-    fn new(vendor: PromptModel, model: String, api_key: String) -> Self {
-        RequestsWrap { vendor, model, api_key }
-    }
-}
-
 pub fn llm_request(
     diff_content: &str,
     vendor: Option<PromptModel>,
