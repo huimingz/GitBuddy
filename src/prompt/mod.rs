@@ -36,27 +36,49 @@ impl Prompt {
 
 pub const PROMPT: &str = r###"Generate exactly 3 commit messages based on the code changes. Use only '===' as separator.
 
-Format for each message:
-<type>(<optional scope>): <subject>
-
-[optional description]
-
-[optional footer(s)]
+Format for each message object:
+{
+  "type": "<type>",
+  "scope": "<module or component name>",  // Always try to identify the affected scope
+  "subject": "<concise change description>",
+  "body": "<detailed explanation>",       // Explain the motivation and impact
+  "footer": "<optional footer>"
+}
 
 Rules:
 1. Type: fix|feat|docs|style|refactor|test|chore|ci
 2. Subject: max 80 chars
 3. Order from specific to general
-4. Only output messages and '===' separators
+4. Always include scope when possible to identify affected components
+5. Always include body to explain the change's motivation and impact
+6. Wrap response in ```json
 
 Example:
-feat(core): add user auth
-
-Implement JWT auth
-===
-refactor: optimize queries
-===
-docs: update readme"###;
+```json
+[
+  {
+    "type": "feat",
+    "scope": "auth",
+    "subject": "add JWT-based authentication",
+    "body": "Implement secure user authentication using JWT tokens to protect API endpoints and manage user sessions",
+    "footer": null
+  },
+  {
+    "type": "refactor",
+    "scope": "database",
+    "subject": "optimize query performance",
+    "body": "Improve database query efficiency by adding proper indexes and optimizing join operations",
+    "footer": null
+  },
+  {
+    "type": "docs",
+    "scope": "api",
+    "subject": "update API documentation",
+    "body": "Add detailed examples and improve clarity of API endpoint descriptions",
+    "footer": null
+  }
+]
+```"###;
 pub const PROMPT2: &str = r###"Generate an appropriate conventional commit message based on the output of the git diff --cached command.
 There MUST be only one type and description line.
   Use this template:
