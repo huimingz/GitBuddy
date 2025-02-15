@@ -63,7 +63,7 @@ fn main() {
             dry_run,
             // vendor,
         }) => {
-            ai::handler(*push, *dry_run, cli.vendor, cli.model, cli.prompt, cli.prefix);
+            ai::handler(*push, *dry_run, cli.vendor, cli.model, cli.prompt, cli.prefix).unwrap();
         }
         Some(Commands::Config { vendor, api_key, model }) => {
             let model = if let Some(model) = model {
@@ -74,6 +74,6 @@ fn main() {
 
             config::handler(vendor, api_key, model.as_str()).unwrap();
         }
-        None => ai::handler(false, false, cli.vendor, cli.model, cli.prompt, cli.prefix),
+        None => ai::handler(false, false, cli.vendor, cli.model, cli.prompt, cli.prefix).unwrap(),
     }
 }

@@ -147,7 +147,7 @@ impl OpenAICompatible {
             let mut message = String::new();
             let reader = BufReader::new(response);
             let (start_separator, end_separator) = get_stream_separator(3); // 使用方案2，可以改为1或3尝试其他效果
-            println!("\n{}", start_separator);
+            println!("{}", start_separator);
             for line in reader.lines() {
                 let line = line?;
                 if line.starts_with("data: ") {
@@ -164,7 +164,7 @@ impl OpenAICompatible {
                     }
                 }
             }
-            println!("\n{}", end_separator);
+            println!("\n{}\n", end_separator);
 
             let re = Regex::new(r"(?s)<think>.*?</think>")
                 .map_err(|e| format!("invalid regex, err: {e}"))
