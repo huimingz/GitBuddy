@@ -97,7 +97,7 @@ impl OpenAICompatible {
             },
             Message {
                 role: String::from("user"),
-                content: format!("diff content: \n{diff_content}"),
+                content: format!("Generate commit message for these changes. If it's a new file, focus on its purpose rather than analyzing its content:\n```diff\n{diff_content}\n```"),
             },
         ];
         if let Some(p) = prefix {
@@ -107,10 +107,20 @@ impl OpenAICompatible {
                 content: format!("type of commit message must be {p}"),
             })
         }
-        println!("max token limit: {}", option.max_tokens);
-
         let url = format!("{}/v1/chat/completions", self.url);
-        println!("Vendor Endpoint: {}", url);
+
+        println!("\n{} {} {}",
+            "🤖".bright_cyan(),
+            "LLM Configuration".bright_cyan().bold(),
+            "⚙️".bright_cyan()
+        );
+        println!("  {} Model: {}", "🚀".bright_yellow(), self.model.bright_green().bold());
+        println!("  {} Max Tokens: {}", "📊".bright_yellow(), option.max_tokens.to_string().bright_green().bold());
+        println!("  {} Temperature: {}", "🌡️".bright_yellow(), option.temperature.to_string().bright_green().bold());
+        println!("  {} Top P: {}", "🎲".bright_yellow(), option.top_p.to_string().bright_green().bold());
+        println!("  {} Diff Length: {} chars", "📝".bright_yellow(), diff_content.len().to_string().bright_green().bold());
+        println!("  {} Diff Lines: {} lines", "📋".bright_yellow(), diff_content.lines().count().to_string().bright_green().bold());
+        println!("  {} Endpoint: {}\n", "🔗".bright_yellow(), url.bright_green());
 
         let response = client
             .post(url)

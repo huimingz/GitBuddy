@@ -9,18 +9,11 @@ use crate::prompt::Prompt;
 
 mod git;
 
-fn get_stats_separator() -> (String, String) {
-    (
-        format!("{} {} {}",
-            "📊".bright_cyan(),
-            "Stats Dashboard".bright_cyan().bold(),
-            "━".repeat(30).bright_cyan()
-        ),
-        format!("{} {} {}",
-            "📈".bright_cyan(),
-            "End of Stats".bright_cyan().bold(),
-            "━".repeat(33).bright_cyan()
-        )
+fn get_stats_separator() -> String {
+    format!("{}  {}  {}", 
+        "⚡".bright_yellow(),
+        "Performance Stats".bright_cyan().bold(),
+        "⚡".bright_yellow()
     )
 }
 
@@ -28,10 +21,10 @@ fn format_stat(label: &str, value: i64, emoji: &str) -> Option<String> {
     if value <= 0 {
         return None;
     }
-    Some(format!("{} {}: {}",
+    Some(format!("{}  {}  {}", 
         emoji.bright_yellow(),
-        label.bright_cyan(),
-        value.to_string().bright_green().bold()
+        format!("{}: ", label).bright_cyan(),
+        format!("{}", value).bright_green().bold()
     ))
 }
 
@@ -68,9 +61,7 @@ pub fn handler(
     let llm_result = llm::llm_request(&diff_content, vendor, model, prompt, prefix).expect("request llm success");
     let duration = start.elapsed();
 
-    let (header, footer) = get_stats_separator();
-    println!("\n{}", header);
-
+    let separator = get_stats_separator();
     let mut stats = Vec::new();
     if let Some(stat) = format_stat("Duration", duration.as_millis() as i64, "⏱️") {
         stats.push(stat);
@@ -84,12 +75,13 @@ pub fn handler(
     if let Some(stat) = format_stat("Prompt Tokens", llm_result.prompt_tokens, "🔤") {
         stats.push(stat);
     }
-
+    
     if !stats.is_empty() {
+        println!("\n{}", separator);
         for stat in stats {
             println!("  {}", stat);
         }
-        println!("{}\n", footer);
+        println!();
     }
 
     let confirm = llm::confirm_commit(&llm_result, llm_result.commit_message.as_str()).unwrap();

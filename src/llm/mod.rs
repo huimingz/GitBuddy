@@ -70,7 +70,6 @@ pub fn llm_request(
         .expect("must load model config and prompt template");
 
     let model = model.unwrap_or(model_config.model.clone());
-    println!("use model: {model}");
 
     get_commit_message(
         prompt_model,
