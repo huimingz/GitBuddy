@@ -1,5 +1,5 @@
 use crate::config::ModelParameters;
-use crate::llm::LLMResult;
+use crate::llm::{formatter, LLMResult};
 use crate::prompt::Prompt;
 use anyhow::{anyhow, Result};
 use colored::Colorize;
@@ -109,17 +109,38 @@ impl OpenAICompatible {
         }
         let url = format!("{}/v1/chat/completions", self.url);
 
-        println!("\n{} {} {}",
+        println!(
+            "\n{} {} {}",
             "🤖".bright_cyan(),
             "LLM Configuration".bright_cyan().bold(),
             "⚙️".bright_cyan()
         );
         println!("  {} Model: {}", "🚀".bright_yellow(), self.model.bright_green().bold());
-        println!("  {} Max Tokens: {}", "📊".bright_yellow(), option.max_tokens.to_string().bright_green().bold());
-        println!("  {} Temperature: {}", "🌡️".bright_yellow(), option.temperature.to_string().bright_green().bold());
-        println!("  {} Top P: {}", "🎲".bright_yellow(), option.top_p.to_string().bright_green().bold());
-        println!("  {} Diff Length: {} chars", "📝".bright_yellow(), diff_content.len().to_string().bright_green().bold());
-        println!("  {} Diff Lines: {} lines", "📋".bright_yellow(), diff_content.lines().count().to_string().bright_green().bold());
+        println!(
+            "  {} Max Tokens: {}",
+            "📊".bright_yellow(),
+            option.max_tokens.to_string().bright_green().bold()
+        );
+        println!(
+            "  {} Temperature: {}",
+            "🌡️".bright_yellow(),
+            option.temperature.to_string().bright_green().bold()
+        );
+        println!(
+            "  {} Top P: {}",
+            "🎲".bright_yellow(),
+            option.top_p.to_string().bright_green().bold()
+        );
+        println!(
+            "  {} Diff Length: {} chars",
+            "📝".bright_yellow(),
+            diff_content.len().to_string().bright_green().bold()
+        );
+        println!(
+            "  {} Diff Lines: {} lines",
+            "📋".bright_yellow(),
+            diff_content.lines().count().to_string().bright_green().bold()
+        );
         println!("  {} Endpoint: {}\n", "🔗".bright_yellow(), url.bright_green());
 
         let response = client
@@ -146,7 +167,7 @@ impl OpenAICompatible {
         return if response.status().is_success() {
             let mut message = String::new();
             let reader = BufReader::new(response);
-            let (start_separator, end_separator) = get_stream_separator(3); // 使用方案2，可以改为1或3尝试其他效果
+            let (start_separator, end_separator) = formatter::get_stream_separator(3); // 使用方案2，可以改为1或3尝试其他效果
             println!("{}", start_separator);
             for line in reader.lines() {
                 let line = line?;
@@ -196,66 +217,6 @@ impl OpenAICompatible {
     }
 }
 
-fn get_stream_separator(style: u8) -> (String, String) {
-    match style {
-        1 => (
-            "🚀 Generating Commit Messages ".bright_cyan().to_string() + &"•".repeat(30).bright_magenta(),
-            "✨ Generation Complete ".bright_cyan().to_string() + &"•".repeat(33).bright_magenta()
-        ),
-        2 => (
-            format!("{} {} {}",
-                "┌".bright_green(),
-                "Initializing AI Assistant".bright_cyan(),
-                "─".repeat(30).bright_green()
-            ),
-            format!("{} {} {}",
-                "└".bright_green(),
-                "AI Assistant Completed".bright_cyan(),
-                "─".repeat(32).bright_green()
-            )
-        ),
-        3 => (
-            format!("{} {} {}",
-                "▶".bright_yellow(),
-                "Starting Commit Analysis".bright_cyan(),
-                "═".repeat(32).bright_yellow()
-            ),
-            format!("{} {} {}",
-                "■".bright_yellow(),
-                "Analysis Complete".bright_cyan(),
-                "═".repeat(36).bright_yellow()
-            )
-        ),
-        _ => (
-            "------------------------- Stream Start -------------------------".to_string(),
-            "------------------------- Stream End -------------------------".to_string()
-        ),
-    }
-}
-
-fn wrap_text(text: &str, width: usize) -> String {
-    let words: Vec<&str> = text.split_whitespace().collect();
-    let mut lines = Vec::new();
-    let mut current_line = String::new();
-
-    for word in words {
-        if current_line.is_empty() {
-            current_line = word.to_string();
-        } else if current_line.len() + word.len() + 1 <= width {
-            current_line.push(' ');
-            current_line.push_str(word);
-        } else {
-            lines.push(current_line);
-            current_line = word.to_string();
-        }
-    }
-    if !current_line.is_empty() {
-        lines.push(current_line);
-    }
-
-    lines.join("\n")
-}
-
 fn fix_json_response(text: &str) -> String {
     // 使用正则表达式匹配 JSON 数组部分
     let re = Regex::new(r"\[\s*\{.*\}\s*\]").unwrap();
@@ -265,16 +226,13 @@ fn fix_json_response(text: &str) -> String {
 
         // 清理常见的 JSON 格式问题
         let cleaned = json_str
-            .replace("\\n", "\n")  // 处理转义的换行符
+            .replace("\\n", "\n") // 处理转义的换行符
             .replace("\\\"", "\"") // 处理转义的引号
             .replace("\\\\", "\\") // 处理转义的反斜杠
-            .replace("\\'", "'");  // 处理转义的单引号
+            .replace("\\'", "'"); // 处理转义的单引号
 
         // 处理数组末尾的多余逗号
-        let comma_fixed = Regex::new(r",(\s*\])")
-            .unwrap()
-            .replace_all(&cleaned, "$1")
-            .to_string();
+        let comma_fixed = Regex::new(r",(\s*\])").unwrap().replace_all(&cleaned, "$1").to_string();
 
         // 尝试解析和重新格式化 JSON
         if let Ok(json) = serde_json::from_str::<serde_json::Value>(&comma_fixed) {
@@ -330,13 +288,13 @@ fn process_llm_response(response: String) -> Vec<String> {
                 // 添加可选的消息体
                 if let Some(body) = msg.body.filter(|s| !s.trim().is_empty()) {
                     commit.push_str("\n\n");
-                    commit.push_str(&wrap_text(body.trim(), 80));
+                    commit.push_str(&formatter::wrap_text(body.trim(), 80));
                 }
 
                 // 添加可选的页脚
                 if let Some(footer) = msg.footer.filter(|s| !s.trim().is_empty()) {
                     commit.push_str("\n\n");
-                    commit.push_str(&wrap_text(footer.trim(), 80));
+                    commit.push_str(&formatter::wrap_text(footer.trim(), 80));
                 }
 
                 commit
