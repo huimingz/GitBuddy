@@ -2,7 +2,7 @@
 name = "gitbuddy"
 version = "0.2.2"
 edition = "2021"
-authors = ["Jianbang <fujianbang0ops@gmail.com>", "HuimingZ <huimingz12@outlook.com>"]
+authors = ["Jianbang <fujianbang0ops@gmail.com>", "Huimingz <huimingz12@outlook.com>"]
 description = "An AI-driven tool designed to simplify your Git commit process."
 license = "Apache-2.0"
 repository = "https://github.com/fujianbang/gitbuddy"
