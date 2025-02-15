@@ -109,7 +109,7 @@ impl OpenAICompatible {
         }
         let url = format!("{}/v1/chat/completions", self.url);
 
-        self.print_configuration(diff_content, option, &url);
+        self.print_configuration(diff_content, &option, &url);
 
         let response = client
             .post(url)
@@ -184,7 +184,7 @@ impl OpenAICompatible {
         };
     }
 
-    fn print_configuration(&self, diff_content: &str, option: ModelParameters, url: &String) {
+    fn print_configuration(&self, diff_content: &str, option: &ModelParameters, url: &String) {
         println!(
             "\n{} {} {}",
             "🤖".bright_cyan(),
