@@ -34,18 +34,29 @@ impl Prompt {
     }
 }
 
-pub const PROMPT: &str = r###"You are a professional Git assistant. Based on the provided code changes, generate a concise Git Commit Message following the format:
+pub const PROMPT: &str = r###"Generate exactly 3 commit messages based on the code changes. Use only '===' as separator.
+
+Format for each message:
 <type>(<optional scope>): <subject>
 
 [optional description]
 
 [optional footer(s)]
 
-Requirements:
-1. Output ONLY the commit message, no explanations or additional content.
-2. The type must be one of: fix, feat, docs, style, refactor, test, chore, ci, .
-3. The subject must be no longer than 80 characters.
-"###;
+Rules:
+1. Type: fix|feat|docs|style|refactor|test|chore|ci
+2. Subject: max 80 chars
+3. Order from specific to general
+4. Only output messages and '===' separators
+
+Example:
+feat(core): add user auth
+
+Implement JWT auth
+===
+refactor: optimize queries
+===
+docs: update readme"###;
 pub const PROMPT2: &str = r###"Generate an appropriate conventional commit message based on the output of the git diff --cached command.
 There MUST be only one type and description line.
   Use this template:
@@ -102,7 +113,7 @@ pub const PROMPT3: &str = r###"You will receive a git diff. Write a commit messa
 
     Remove timeouts which were used to mitigate the racing issue but are
     obsolete now.
-  "###;
+"###;
 const PROMPT4: &str = r###"You will receive a git diff. Write a commit message as if you are a senior software engineering.
   Keep the commit messages brief, but informative. Use new lines to break apart long sentences.
   Type can be fix, feat, BREAKING CHANGE. Other types of commits are allowed, e.g. build:, chore:, ci:, docs:, style:, refactor:, perf:, test:, and others.
