@@ -49,15 +49,17 @@ pub fn handler(
 
     println!("{}  {}", "Completed!".green(), usage_message.truecolor(128, 128, 128));
 
-    match llm::confirm_commit(llm_result.commit_message.as_str()).unwrap() {
+    let confirm = llm::confirm_commit(&llm_result, llm_result.commit_message.as_str()).unwrap();
+
+    let commit_message = match confirm {
         Confirm::Retry | Confirm::Exit => {
             println!("{}", "Cancel commit".red());
-            return;
+            None
         }
-        _ => {}
+        Confirm::Ok(msg) => Some(msg),
     };
 
-    let result = git::git_commit(llm_result.commit_message.trim(), dry_run);
+    let result = git::git_commit(commit_message.unwrap(), dry_run);
     match result {
         Ok(_) => {
             println!("{}", "Commit success!!!".green().bold());
