@@ -65,7 +65,7 @@ Example:
     "type": "feat",
     "scope": "auth",
     "subject": "add JWT-based authentication",
-    "body": "Implement secure user authentication using JWT tokens\nto protect API endpoints and manage user sessions",
+    "body": "Implement secure user authentication using JWT tokens to protect API endpoints and manage user sessions",
     "footer": null
   },
   {

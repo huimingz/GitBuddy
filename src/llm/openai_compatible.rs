@@ -116,6 +116,7 @@ impl OpenAICompatible {
                 content: format!("type of commit message must be {p}"),
             })
         }
+        println!("max token limit: {}", option.max_tokens);
 
         let url = format!("{}/v1/chat/completions", self.url);
         println!("Vendor Endpoint: {}", url);
@@ -136,11 +137,6 @@ impl OpenAICompatible {
                 "keep_alive": "30m",
                 "max_tokens": option.max_tokens,
                 "stream": true,
-                // "format": {
-                //     "type": "object",
-                //     "properties": {"subject": {"type":"string"}, "scope": {"type":"string"}, "summary": {"type":"string"}},
-                //     "required": ["subject", "scope", "summary"]
-                // },
             }))
             .send()
             .expect("Error sending request");
@@ -224,10 +220,10 @@ fn wrap_text(text: &str, width: usize) -> String {
 fn fix_json_response(text: &str) -> String {
     // 使用正则表达式匹配 JSON 数组部分
     let re = Regex::new(r"\[\s*\{.*\}\s*\]").unwrap();
-    
+
     if let Some(json_match) = re.find(text) {
         let json_str = json_match.as_str();
-        
+
         // 清理常见的 JSON 格式问题
         let cleaned = json_str
             .replace("\\n", "\n")  // 处理转义的换行符
@@ -275,10 +271,10 @@ fn extract_json_content(text: &str) -> String {
 fn process_llm_response(response: String) -> Vec<String> {
     // 首先尝试提取代码块内容
     let content = extract_json_content(&response);
-    
+
     // 尝试修复和解析 JSON
     let fixed_json = fix_json_response(&content);
-    
+
     match serde_json::from_str::<Vec<CommitMessage>>(&fixed_json) {
         Ok(messages) => messages
             .into_iter()
