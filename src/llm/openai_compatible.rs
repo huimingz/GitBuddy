@@ -81,15 +81,6 @@ struct Message {
 }
 
 impl OpenAICompatible {
-    // pub(crate) fn stream_request(
-    //     &self,
-    //     diff_content: &str,
-    //     option: ModelParameters,
-    //     prefix: Option<String>,
-    // ) -> Result<LLMResult> {
-    //     let client = reqwest::blocking::Client::new();
-    // }
-
     pub(crate) fn request(
         &self,
         diff_content: &str,
@@ -120,6 +111,7 @@ impl OpenAICompatible {
 
         let url = format!("{}/v1/chat/completions", self.url);
         println!("Vendor Endpoint: {}", url);
+
         let response = client
             .post(url)
             .timeout(Duration::from_secs(120))
@@ -144,7 +136,8 @@ impl OpenAICompatible {
         return if response.status().is_success() {
             let mut message = String::new();
             let reader = BufReader::new(response);
-            println!("------------------------- Stream Start -------------------------");
+            let (start_separator, end_separator) = get_stream_separator(2); // 使用方案2，可以改为1或3尝试其他效果
+            println!("\n{}\n", start_separator);
             for line in reader.lines() {
                 let line = line?;
                 if line.starts_with("data: ") {
@@ -153,7 +146,6 @@ impl OpenAICompatible {
                         break;
                     }
 
-                    // println!("收到事件流: '{}'", payload);
                     let data: OpenAIStreamResponse = serde_json::from_str(payload)?;
                     for choice in data.choices {
                         print!("{}", choice.delta.content.cyan());
@@ -162,7 +154,7 @@ impl OpenAICompatible {
                     }
                 }
             }
-            println!("\n------------------------- Stream End -------------------------\n");
+            println!("\n{}\n", end_separator);
 
             let re = Regex::new(r"(?s)<think>.*?</think>")
                 .map_err(|e| format!("invalid regex, err: {e}"))
@@ -191,6 +183,43 @@ impl OpenAICompatible {
                 status_code
             ));
         };
+    }
+}
+
+fn get_stream_separator(style: u8) -> (String, String) {
+    match style {
+        1 => (
+            "🚀 Generating Commit Messages ".bright_cyan().to_string() + &"•".repeat(30).bright_magenta(),
+            "✨ Generation Complete ".bright_cyan().to_string() + &"•".repeat(33).bright_magenta()
+        ),
+        2 => (
+            format!("{} {} {}",
+                "┌".bright_green(),
+                "Initializing AI Assistant".bright_cyan(),
+                "─".repeat(30).bright_green()
+            ),
+            format!("{} {} {}",
+                "└".bright_green(),
+                "AI Assistant Completed".bright_cyan(),
+                "─".repeat(32).bright_green()
+            )
+        ),
+        3 => (
+            format!("{} {} {}",
+                "▶".bright_yellow(),
+                "Starting Commit Analysis".bright_cyan(),
+                "═".repeat(32).bright_yellow()
+            ),
+            format!("{} {} {}",
+                "■".bright_yellow(),
+                "Analysis Complete".bright_cyan(),
+                "═".repeat(36).bright_yellow()
+            )
+        ),
+        _ => (
+            "------------------------- Stream Start -------------------------".to_string(),
+            "------------------------- Stream End -------------------------".to_string()
+        ),
     }
 }
 
