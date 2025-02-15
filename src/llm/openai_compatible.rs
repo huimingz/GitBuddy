@@ -1,6 +1,5 @@
 use crate::config::ModelParameters;
 use crate::llm::{formatter, LLMResult};
-use crate::prompt::Prompt;
 use anyhow::{anyhow, Result};
 use colored::Colorize;
 use regex::Regex;
