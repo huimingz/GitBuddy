@@ -97,9 +97,7 @@ pub enum Confirm<'a> {
 
 pub fn confirm_commit<'a>(result: &'a LLMResult, _commit_message: &'a str) -> Result<Confirm<'a>, &'static str> {
     theme::print_commit_options(result, theme::DEFAULT_COMMIT_OPTION_STYLE);
-
-    let input = user_choice(result);
-    match input.as_str() {
+    match user_choice(result).as_str() {
         "" => Ok(Confirm::Ok(&result.commit_messages[0])),
         "n" => Ok(Confirm::Exit),
         num => {
