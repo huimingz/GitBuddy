@@ -98,22 +98,7 @@ pub enum Confirm<'a> {
 pub fn confirm_commit<'a>(result: &'a LLMResult, _commit_message: &'a str) -> Result<Confirm<'a>, &'static str> {
     theme::print_commit_options(result, theme::DEFAULT_COMMIT_OPTION_STYLE);
 
-    print!(
-        "\n{} {} {} {} {}\n{} ",
-        "🎯".bright_yellow(),
-        "Select Your Commit".bright_cyan().bold(),
-        format!("[1-{}]", result.commit_messages.len()).bright_green(),
-        "•".bright_yellow(),
-        "(n: cancel)".bright_red(),
-        "⌲ Enter your choice (default: 1): ".bright_yellow()
-    );
-    let mut input = String::new();
-
-    // flush
-    std::io::stdout().flush().expect("Failed to flush stdout");
-    std::io::stdin().read_line(&mut input).expect("Failed to read line");
-
-    let input = input.trim().to_lowercase();
+    let input = user_choice(result);
     match input.as_str() {
         "" => Ok(Confirm::Ok(&result.commit_messages[0])),
         "n" => Ok(Confirm::Exit),
@@ -129,4 +114,23 @@ pub fn confirm_commit<'a>(result: &'a LLMResult, _commit_message: &'a str) -> Re
             }
         }
     }
+}
+
+fn user_choice(result: &LLMResult) -> String {
+    print!(
+        "\n{} {} {} {} {}\n{} ",
+        "🎯".bright_yellow(),
+        "Select Your Commit".bright_cyan().bold(),
+        format!("[1-{}]", result.commit_messages.len()).bright_green(),
+        "•".bright_yellow(),
+        "(n: cancel)".bright_red(),
+        "⌲ Enter your choice (default: 1): ".bright_yellow()
+    );
+    let mut input = String::new();
+
+    // flush
+    std::io::stdout().flush().expect("Failed to flush stdout");
+    std::io::stdin().read_line(&mut input).expect("Failed to read line");
+
+    input.trim().to_lowercase()
 }
