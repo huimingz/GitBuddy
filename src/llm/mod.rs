@@ -232,8 +232,15 @@ pub fn confirm_commit<'a>(result: &'a LLMResult, _commit_message: &'a str) -> Re
     }
     println!("{}\n", footer);
     print!(
-        "Choose a commit message (1-{}, default: 1, n: cancel, c: customize): ",
-        result.commit_messages.len()
+        "\n{} {} {} {} {} {} {}\n{} ",
+        "🎯".bright_yellow(),
+        "Select Your Commit".bright_cyan().bold(),
+        format!("[1-{}]", result.commit_messages.len()).bright_green(),
+        "•".bright_yellow(),
+        "(n: cancel)".bright_red(),
+        "•".bright_yellow(),
+        "(c: customize)".bright_magenta(),
+        "→".bright_yellow()
     );
     let mut input = String::new();
 
