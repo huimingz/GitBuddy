@@ -232,15 +232,13 @@ pub fn confirm_commit<'a>(result: &'a LLMResult, _commit_message: &'a str) -> Re
     }
     println!("{}", footer);
     print!(
-        "\n{} {} {} {} {} {} {} {}\n{} ",
+        "\n{} {} {} {} {} {}\n{} ",
         "🎯".bright_yellow(),
         "Select Your Commit".bright_cyan().bold(),
         format!("[1-{}]", result.commit_messages.len()).bright_green(),
         "(default: 1)".bright_blue(),
         "•".bright_yellow(),
         "(n: cancel)".bright_red(),
-        "•".bright_yellow(),
-        "(c: customize)".bright_magenta(),
         "→".bright_yellow()
     );
     let mut input = String::new();
@@ -253,7 +251,6 @@ pub fn confirm_commit<'a>(result: &'a LLMResult, _commit_message: &'a str) -> Re
     match input.as_str() {
         "" => Ok(Confirm::Ok(&result.commit_messages[0])),
         "n" => Ok(Confirm::Exit),
-        "c" => Ok(Confirm::Retry),
         num => {
             if let Ok(choice) = num.parse::<usize>() {
                 if choice > 0 && choice <= result.commit_messages.len() {
