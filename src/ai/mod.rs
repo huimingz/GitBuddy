@@ -104,9 +104,7 @@ pub fn handler(
 
     let result = git::git_commit(commit_message.unwrap(), dry_run);
     match result {
-        Ok(_) => {
-            println!("{}", "Commit success!!!".green().bold());
-        }
+        Ok(_) => {}
         Err(e) => {
             eprintln!("{}", e)
         }
