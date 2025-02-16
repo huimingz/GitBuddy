@@ -1,6 +1,8 @@
 use std::process::Command;
 use colored::Colorize;
 
+/// Returns a list of staged file names in the git repository.
+/// This function executes `git diff --cached --name-only` to get the list.
 pub fn git_stage_filenames() -> Vec<String> {
     let output = Command::new("git")
         .args([
@@ -30,6 +32,9 @@ pub fn git_stage_filenames() -> Vec<String> {
         .collect::<Vec<_>>()
 }
 
+/// Returns the diff content of staged files in the git repository.
+/// This function executes `git diff --cached` while excluding certain files
+/// specified in the ignore list.
 pub fn git_stage_diff() -> String {
     let exclude_path: Vec<String> = ignore_filenames()
         .iter()
@@ -57,6 +62,8 @@ pub fn git_stage_diff() -> String {
     String::from_utf8(output.stdout).unwrap()
 }
 
+/// Returns a list of file patterns to ignore when generating diffs.
+/// These patterns typically include build artifacts and dependency lock files.
 fn ignore_filenames() -> Vec<&'static str> {
     vec![
         /* Rust files */
@@ -71,6 +78,14 @@ fn ignore_filenames() -> Vec<&'static str> {
 }
 
 /// Commits the changes to the repository.
+/// 
+/// # Arguments
+/// * `message` - The commit message to use
+/// * `dry_run` - If true, only simulate the commit without actually performing it
+/// 
+/// # Returns
+/// * `Ok(())` if the commit was successful or it was a dry run
+/// * `Err` if the commit failed
 pub fn git_commit(message: &str, dry_run: bool) -> anyhow::Result<()> {
     if dry_run {
         return Ok(());
@@ -107,6 +122,13 @@ pub fn git_commit(message: &str, dry_run: bool) -> anyhow::Result<()> {
 }
 
 /// Pushes the changes to the remote repository.
+/// 
+/// # Arguments
+/// * `dry_run` - If true, only simulate the push without actually performing it
+/// 
+/// # Returns
+/// * `Ok(())` if the push was successful or it was a dry run
+/// * `Err` if the push failed
 pub fn git_push(dry_run: bool) -> anyhow::Result<()> {
     if dry_run {
         return Ok(());

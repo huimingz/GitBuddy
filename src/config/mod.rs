@@ -26,6 +26,7 @@ pub fn handler(vendor: &PromptModelVendor, api_key: &str, model: &str) -> Result
     Ok(())
 }
 
+/// Returns the default base URL for a given model vendor
 fn get_default_base_url(vendor: &PromptModelVendor) -> String {
     match vendor {
         PromptModelVendor::OpenAI => "https://api.openai.com/v1".to_string(),
@@ -34,6 +35,7 @@ fn get_default_base_url(vendor: &PromptModelVendor) -> String {
     }
 }
 
+/// Creates a default configuration with predefined settings
 fn create_default_config() -> GlobalConfig {
     GlobalConfig {
         default: DefaultConfig {
@@ -52,33 +54,52 @@ fn create_default_config() -> GlobalConfig {
     }
 }
 
+/// Retrieves the global configuration from storage
+/// 
+/// # Returns
+/// * `Ok(GlobalConfig)` if configuration was found and loaded successfully
+/// * `Err` if configuration was not found or could not be loaded
 pub fn get_config() -> Result<GlobalConfig> {
     GlobalConfig::load().ok_or_else(|| anyhow!("Config not found."))
 }
 
+/// Global configuration structure for GitBuddy
 #[derive(Debug, Serialize, Deserialize)]
 pub struct GlobalConfig {
+    /// Default configuration settings
     pub default: DefaultConfig,
+    /// OpenAI model configuration
     pub openai: Option<ModelConfig>,
+    /// DeepSeek model configuration
     pub deepseek: Option<ModelConfig>,
+    /// Ollama model configuration
     pub ollama: Option<ModelConfig>,
+    /// Model parameters for inference
     pub model_parameters: Option<ModelParameters>,
 }
 
 impl GlobalConfig {
-    /// Create a new configuration with default values
+    /// Creates a new configuration with default values
     pub fn new() -> Self {
         create_default_config()
     }
 
-    /// Save config to file
+    /// Saves the current configuration to storage
+    /// 
+    /// # Returns
+    /// * `Ok(())` if save was successful
+    /// * `Err` if save failed
     pub fn save(&self) -> Result<()> {
         let content = toml::to_string(self)?;
         storage::save_config(&content)?;
         Ok(())
     }
 
-    /// Load config from file
+    /// Loads configuration from storage
+    /// 
+    /// # Returns
+    /// * `Some(GlobalConfig)` if load was successful
+    /// * `None` if load failed or config was not found
     pub fn load() -> Option<Self> {
         let content = storage::read_config().unwrap_or_default();
         match toml::from_str(content.as_str()) {
@@ -90,7 +111,14 @@ impl GlobalConfig {
         }
     }
 
-    // load model
+    /// Gets the model configuration for a specified vendor
+    /// 
+    /// # Arguments
+    /// * `vendor` - Optional vendor to get configuration for. If None, uses default vendor
+    /// 
+    /// # Returns
+    /// * `Some((&ModelConfig, PromptModelVendor))` if configuration exists for vendor
+    /// * `None` if no configuration exists for vendor
     pub fn model(&self, vendor: Option<PromptModelVendor>) -> Option<(&ModelConfig, PromptModelVendor)> {
         match vendor.unwrap_or(self.default.default_vendor) {
             PromptModelVendor::OpenAI => self.openai.as_ref().map(|cfg| (cfg, PromptModelVendor::OpenAI)),
@@ -112,24 +140,36 @@ impl GlobalConfig {
     }
 }
 
+/// Model-specific configuration
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct ModelConfig {
+    /// API key for the model vendor
     pub api_key: Option<String>,
+    /// Model identifier/name
     pub model: String,
+    /// Base URL for API requests
     pub base_url: String,
 }
 
+/// Default configuration settings
 #[derive(Debug, Serialize, Deserialize)]
 pub struct DefaultConfig {
+    /// Default model vendor to use
     pub default_vendor: PromptModelVendor,
-    pub timeout: u32,
+    /// Request timeout in seconds
+    pub timeout: u64,
 }
 
+/// Parameters for model inference
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct ModelParameters {
-    pub temperature: f64,
-    pub top_p: f64,
+    /// Temperature for controlling randomness (0.0 to 1.0)
+    pub temperature: f32,
+    /// Top-p sampling parameter (0.0 to 1.0)
+    pub top_p: f32,
+    /// Top-k sampling parameter
     pub top_k: u32,
+    /// Maximum number of tokens to generate
     pub max_tokens: u32,
 }
 

@@ -71,7 +71,7 @@ pub fn llm_request(
     )
 }
 
-/// 获取commit消息分隔符
+/// Get the commit message separator with specified style
 fn get_commit_separator(style: u8) -> (String, String, String) {
     match style {
         1 => (

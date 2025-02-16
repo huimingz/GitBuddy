@@ -1,12 +1,18 @@
 use clap::ValueEnum;
 use std::fmt::{Display, Formatter};
 
+/// Represents different prompt templates for generating commit messages
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, ValueEnum, Debug)]
 pub enum Prompt {
+    /// Detailed prompt for generating multiple conventional commit messages
     P1,
+    /// Simple prompt for generating a single conventional commit message
     P2,
+    /// Alternative prompt format for commit message generation
     P3,
+    /// Senior engineer style commit message prompt
     P4,
+    /// Custom prompt template
     P5,
 }
 
@@ -23,6 +29,7 @@ impl Display for Prompt {
 }
 
 impl Prompt {
+    /// Returns the prompt template string for the selected prompt type
     pub(crate) fn value(self) -> &'static str {
         match self {
             Prompt::P1 => PROMPT,
