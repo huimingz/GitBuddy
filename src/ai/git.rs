@@ -1,4 +1,5 @@
 use std::process::Command;
+use colored::Colorize;
 
 pub fn git_stage_filenames() -> Vec<String> {
     let output = Command::new("git")
@@ -75,13 +76,32 @@ pub fn git_commit(message: &str, dry_run: bool) -> anyhow::Result<()> {
         return Ok(());
     }
 
+    println!(
+        "\n{} {} {}",
+        "🚀".bright_yellow(),
+        "Executing Git Commit".bright_cyan().bold(),
+        "...".bright_yellow()
+    );
+
     let output = Command::new("git")
         .args(["commit", "-m", message])
         .output()?;
 
     if output.status.success() {
+        println!(
+            "{} {} {}\n",
+            "✨".bright_green(),
+            "Commit Successfully".bright_green().bold(),
+            "🎉".bright_green()
+        );
         Ok(())
     } else {
+        println!(
+            "{} {} {}\n",
+            "❌".bright_red(),
+            "Commit Failed".bright_red().bold(),
+            "💔".bright_red()
+        );
         Err(anyhow::anyhow!("commit failed"))
     }
 }

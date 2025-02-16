@@ -151,7 +151,7 @@ impl OpenAICompatible {
                     }
                 }
             }
-            println!("\n{}\n", end_separator);
+            println!("\n{}", end_separator);
 
             let re = Regex::new(r"(?s)<think>.*?</think>")
                 .map_err(|e| format!("invalid regex, err: {e}"))
