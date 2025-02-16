@@ -1,4 +1,7 @@
+use crate::llm::LLMResult;
 use colored::Colorize;
+
+pub const DEFAULT_COMMIT_OPTION_STYLE: u8 = 5;
 
 /// Get the commit message separator with specified style
 pub fn get_commit_separator(style: u8) -> (String, String, String) {
@@ -114,4 +117,27 @@ pub fn get_commit_separator(style: u8) -> (String, String, String) {
             "--------------------------------------------------------------".to_string(),
         ),
     }
+}
+
+pub fn print_commit_options(result: &LLMResult, style: u8) {
+    let (header, prefix, footer) = get_commit_separator(style);
+    println!("{}", header);
+    for (idx, message) in result.commit_messages.iter().enumerate() {
+        if idx < result.commit_messages.len() - 1 {
+            println!(
+                "{}{}\n{}\n",
+                prefix,
+                format!("Option {}:", idx + 1).bold().bright_cyan(),
+                message.cyan()
+            );
+        } else {
+            println!(
+                "{}{}\n{}",
+                prefix,
+                format!("Option {}:", idx + 1).bold().bright_cyan(),
+                message.cyan()
+            );
+        }
+    }
+    println!("{}", footer);
 }
