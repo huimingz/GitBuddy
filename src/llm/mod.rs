@@ -232,11 +232,10 @@ pub fn confirm_commit<'a>(result: &'a LLMResult, _commit_message: &'a str) -> Re
     }
     println!("{}", footer);
     print!(
-        "\n{} {} {} {} {} {} {} {} {} {}\n{} ",
+        "\n{} {} {} {} {} {} {} {}\n{} ",
         "🎯".bright_yellow(),
         "Select Your Commit".bright_cyan().bold(),
         format!("[1-{}]", result.commit_messages.len()).bright_green(),
-        "•".bright_yellow(),
         "(default: 1)".bright_blue(),
         "•".bright_yellow(),
         "(n: cancel)".bright_red(),
