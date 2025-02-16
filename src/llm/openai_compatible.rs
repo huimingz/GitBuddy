@@ -24,6 +24,7 @@ struct OpenAIStreamResponse {
     object: String,
     system_fingerprint: String, // This fingerprint represents the backend configuration that the model runs with.
     choices: Vec<OpenAIStreamChoice>,
+    usage: Option<OpenAIResponseUsage>,
     created: i64, // 创建聊天完成时的 Unix 时间戳（以秒为单位）
 }
 
@@ -134,6 +135,7 @@ impl OpenAICompatible {
             let mut message = String::new();
             let reader = BufReader::new(response);
             let (start_separator, end_separator) = formatter::get_stream_separator(3); // 使用方案2，可以改为1或3尝试其他效果
+            let mut usage = OpenAIResponseUsage::default();
             println!("{}", start_separator);
             for line in reader.lines() {
                 let line = line?;
@@ -149,6 +151,11 @@ impl OpenAICompatible {
                         io::stdout().flush()?; // 强制刷新到终端，确保每次打印都显示
                         message.push_str(choice.delta.content.as_str());
                     }
+                    if let Some(u) = data.usage {
+                        usage.total_tokens += u.total_tokens;
+                        usage.prompt_tokens += u.prompt_tokens;
+                        usage.completion_tokens += u.completion_tokens;
+                    }
                 }
             }
             println!("\n{}", end_separator);
@@ -160,9 +167,9 @@ impl OpenAICompatible {
             let messages = process_llm_response(message.clone())?;
 
             Ok(LLMResult {
-                completion_tokens: -1,
-                prompt_tokens: -1,
-                total_tokens: -1,
+                completion_tokens: usage.completion_tokens,
+                prompt_tokens: usage.prompt_tokens,
+                total_tokens: usage.total_tokens,
                 commit_message: message,
                 commit_messages: messages,
             })

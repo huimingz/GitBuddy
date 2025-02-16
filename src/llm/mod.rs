@@ -231,6 +231,7 @@ pub fn confirm_commit<'a>(result: &'a LLMResult, _commit_message: &'a str) -> Re
         }
     }
     println!("{}", footer);
+
     print!(
         "\n{} {} {} {} {} {}\n{} ",
         "🎯".bright_yellow(),
@@ -239,7 +240,7 @@ pub fn confirm_commit<'a>(result: &'a LLMResult, _commit_message: &'a str) -> Re
         "(default: 1)".bright_blue(),
         "•".bright_yellow(),
         "(n: cancel)".bright_red(),
-        "→".bright_yellow()
+        "⌲ Enter your choice: ".bright_yellow()
     );
     let mut input = String::new();
 
