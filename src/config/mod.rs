@@ -118,21 +118,6 @@ impl GlobalConfig {
     }
 
     /// Gets the model configuration for a specified vendor
-    ///
-    /// # Arguments
-    /// * `vendor` - Optional vendor to get configuration for. If None, uses default vendor
-    ///
-    /// # Returns
-    /// * `Some((&ModelConfig, PromptModelVendor))` if configuration exists for vendor
-    /// * `None` if no configuration exists for vendor
-    pub fn model(&self, vendor: Option<PromptModelVendor>) -> Option<(&ModelConfig, PromptModelVendor)> {
-        match vendor.unwrap_or(self.default.default_vendor) {
-            PromptModelVendor::OpenAI => self.openai.as_ref().map(|cfg| (cfg, PromptModelVendor::OpenAI)),
-            PromptModelVendor::DeepSeek => self.deepseek.as_ref().map(|cfg| (cfg, PromptModelVendor::DeepSeek)),
-            PromptModelVendor::Ollama => self.ollama.as_ref().map(|cfg| (cfg, PromptModelVendor::Ollama)),
-        }
-    }
-
     pub fn load_model(&self, vendor: Option<PromptModelVendor>) -> Option<&ModelConfig> {
         match vendor {
             Some(v) => self.vendors.get(&v),
