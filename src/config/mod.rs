@@ -161,6 +161,12 @@ pub struct ModelConfig {
     pub base_url: String,
 }
 
+impl ModelConfig {
+    pub fn must_api_key(&self) -> String {
+        self.api_key.clone().unwrap_or(String::new())
+    }
+}
+
 /// Default configuration settings
 #[derive(Debug, Serialize, Deserialize)]
 pub struct DefaultConfig {

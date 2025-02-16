@@ -4,7 +4,7 @@ mod openai_compatible_builder;
 mod theme;
 
 use crate::config;
-use crate::config::ModelParameters;
+use crate::config::{ModelConfig, ModelParameters};
 use crate::prompt::Prompt;
 use anyhow::Result;
 use clap::ValueEnum;
@@ -64,24 +64,24 @@ pub fn llm_request(
     get_commit_message(
         prompt_model,
         model.as_str(),
-        model_config.api_key.clone().unwrap_or("".into()).as_str(),
         diff_content,
         config.model_params(),
         prompt,
         prefix,
+        model_config,
     )
 }
 
 fn get_commit_message(
     vendor: PromptModelVendor,
     model: &str,
-    api_key: &str,
     diff_content: &str,
     option: ModelParameters,
     prompt: Prompt,
     prefix: Option<String>,
+    model_config: &ModelConfig,
 ) -> Result<LLMResult> {
-    let builder = OpenAICompatibleBuilder::new(vendor, model, api_key);
+    let builder = OpenAICompatibleBuilder::new(vendor, model_config);
 
     // generate http request
     let m = builder.build(prompt.value().to_string());

@@ -1,3 +1,4 @@
+use crate::config::ModelConfig;
 use crate::llm::openai_compatible::OpenAICompatible;
 use crate::llm::PromptModelVendor;
 
@@ -8,22 +9,22 @@ pub(crate) struct OpenAICompatibleBuilder {
 }
 
 impl OpenAICompatibleBuilder {
-    pub fn new(vendor: PromptModelVendor, model: &str, api_key: &str) -> Self {
+    pub fn new(vendor: PromptModelVendor, model_config: &ModelConfig) -> Self {
         match vendor {
             PromptModelVendor::OpenAI => OpenAICompatibleBuilder {
-                url: String::from("https://api.openai.com"),
-                model: model.to_string(),
-                api_key: api_key.to_string(),
+                url: model_config.base_url.clone(),
+                model: model_config.model.clone(),
+                api_key: model_config.must_api_key(),
             },
             PromptModelVendor::DeepSeek => OpenAICompatibleBuilder {
-                url: String::from("https://api.deepseek.com"),
-                model: model.to_string(),
-                api_key: api_key.to_string(),
+                url: model_config.base_url.clone(),
+                model: model_config.model.clone(),
+                api_key: model_config.must_api_key(),
             },
             PromptModelVendor::Ollama => OpenAICompatibleBuilder {
-                url: String::from("http://localhost:11434"),
-                model: model.to_string(),
-                api_key: api_key.to_string(),
+                url: model_config.base_url.clone(),
+                model: model_config.model.clone(),
+                api_key: model_config.must_api_key(),
             },
         }
     }
