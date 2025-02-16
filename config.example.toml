@@ -1,0 +1,44 @@
+# Default settings
+[default]
+# Default AI service provider (deepseek, openai, ollama)
+default_service = "deepseek"
+# Request timeout in seconds
+timeout = 30
+
+# OpenAI configuration
+[openai]
+# Your OpenAI API key
+api_key = "sk-xxx"
+# Model name (e.g., "gpt-3.5-turbo", "gpt-4")
+model = "gpt-3.5-turbo"
+# API base URL, change this if you're using a proxy
+base_url = "https://api.openai.com/v1"
+
+# DeepSeek configuration
+[deepseek]
+# Your DeepSeek API key
+api_key = "sk-xxx"
+# Model name (e.g., "deepseek-chat")
+model = "deepseek-chat"
+# API base URL
+base_url = "https://api.deepseek.com/v1"
+
+# Ollama configuration (local LLM)
+[ollama]
+# No API key needed for Ollama
+api_key = ""
+# Model name (e.g., "llama2", "mistral")
+model = "llama2"
+# Local Ollama server URL
+base_url = "http://localhost:11434"
+
+# Model parameters for AI response
+[model_parameters]
+# Controls randomness (0.0-1.0)
+temperature = 0.1
+# Top-p sampling (0.0-1.0)
+top_p = 0.75
+# Top-k sampling
+top_k = 5
+# Maximum tokens in response
+max_tokens = 1024
