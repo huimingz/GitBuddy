@@ -1,7 +1,7 @@
 # Default settings
 [default]
-# Default AI service provider (deepseek, openai, ollama)
-default_service = "deepseek"
+# Default AI vendor (deepseek, openai, ollama)
+default_vendor = "deepseek"
 # Request timeout in seconds
 timeout = 30
 

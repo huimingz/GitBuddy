@@ -37,7 +37,7 @@ fn get_default_base_url(vendor: &PromptModel) -> String {
 fn create_default_config() -> GlobalConfig {
     GlobalConfig {
         default: DefaultConfig {
-            default_service: PromptModel::DeepSeek,
+            default_vendor: PromptModel::DeepSeek,
             timeout: 30,
         },
         openai: None,
@@ -92,7 +92,7 @@ impl GlobalConfig {
 
     // load model
     pub fn model(&self, vendor: Option<PromptModel>) -> Option<(&ModelConfig, PromptModel)> {
-        match vendor.unwrap_or(self.default.default_service) {
+        match vendor.unwrap_or(self.default.default_vendor) {
             PromptModel::OpenAI => self.openai.as_ref().map(|cfg| (cfg, PromptModel::OpenAI)),
             PromptModel::DeepSeek => self.deepseek.as_ref().map(|cfg| (cfg, PromptModel::DeepSeek)),
             PromptModel::Ollama => self.ollama.as_ref().map(|cfg| (cfg, PromptModel::Ollama)),
@@ -121,7 +121,7 @@ pub struct ModelConfig {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct DefaultConfig {
-    pub default_service: PromptModel,
+    pub default_vendor: PromptModel,
     pub timeout: u32,
 }
 
