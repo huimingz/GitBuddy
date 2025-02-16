@@ -1,4 +1,4 @@
-use crate::llm::PromptModel;
+use crate::llm::PromptModelVendor;
 use anyhow::{anyhow, Result};
 use serde::{Deserialize, Serialize};
 
@@ -6,7 +6,7 @@ mod storage;
 mod vendor;
 
 /// Update or create configuration for a specific model
-pub fn handler(vendor: &PromptModel, api_key: &str, model: &str) -> Result<()> {
+pub fn handler(vendor: &PromptModelVendor, api_key: &str, model: &str) -> Result<()> {
     let mut config = GlobalConfig::load().unwrap_or_else(|| create_default_config());
 
     let model_config = ModelConfig {
@@ -16,9 +16,9 @@ pub fn handler(vendor: &PromptModel, api_key: &str, model: &str) -> Result<()> {
     };
 
     match vendor {
-        PromptModel::DeepSeek => config.deepseek = Some(model_config),
-        PromptModel::OpenAI => config.openai = Some(model_config),
-        PromptModel::Ollama => config.ollama = Some(model_config),
+        PromptModelVendor::DeepSeek => config.deepseek = Some(model_config),
+        PromptModelVendor::OpenAI => config.openai = Some(model_config),
+        PromptModelVendor::Ollama => config.ollama = Some(model_config),
     }
 
     config.save()?;
@@ -26,18 +26,18 @@ pub fn handler(vendor: &PromptModel, api_key: &str, model: &str) -> Result<()> {
     Ok(())
 }
 
-fn get_default_base_url(vendor: &PromptModel) -> String {
+fn get_default_base_url(vendor: &PromptModelVendor) -> String {
     match vendor {
-        PromptModel::OpenAI => "https://api.openai.com/v1".to_string(),
-        PromptModel::DeepSeek => "https://api.deepseek.com/v1".to_string(),
-        PromptModel::Ollama => "http://localhost:11434".to_string(),
+        PromptModelVendor::OpenAI => "https://api.openai.com/v1".to_string(),
+        PromptModelVendor::DeepSeek => "https://api.deepseek.com/v1".to_string(),
+        PromptModelVendor::Ollama => "http://localhost:11434".to_string(),
     }
 }
 
 fn create_default_config() -> GlobalConfig {
     GlobalConfig {
         default: DefaultConfig {
-            default_vendor: PromptModel::DeepSeek,
+            default_vendor: PromptModelVendor::DeepSeek,
             timeout: 30,
         },
         openai: None,
@@ -91,11 +91,11 @@ impl GlobalConfig {
     }
 
     // load model
-    pub fn model(&self, vendor: Option<PromptModel>) -> Option<(&ModelConfig, PromptModel)> {
+    pub fn model(&self, vendor: Option<PromptModelVendor>) -> Option<(&ModelConfig, PromptModelVendor)> {
         match vendor.unwrap_or(self.default.default_vendor) {
-            PromptModel::OpenAI => self.openai.as_ref().map(|cfg| (cfg, PromptModel::OpenAI)),
-            PromptModel::DeepSeek => self.deepseek.as_ref().map(|cfg| (cfg, PromptModel::DeepSeek)),
-            PromptModel::Ollama => self.ollama.as_ref().map(|cfg| (cfg, PromptModel::Ollama)),
+            PromptModelVendor::OpenAI => self.openai.as_ref().map(|cfg| (cfg, PromptModelVendor::OpenAI)),
+            PromptModelVendor::DeepSeek => self.deepseek.as_ref().map(|cfg| (cfg, PromptModelVendor::DeepSeek)),
+            PromptModelVendor::Ollama => self.ollama.as_ref().map(|cfg| (cfg, PromptModelVendor::Ollama)),
         }
     }
 
@@ -121,7 +121,7 @@ pub struct ModelConfig {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct DefaultConfig {
-    pub default_vendor: PromptModel,
+    pub default_vendor: PromptModelVendor,
     pub timeout: u32,
 }
 

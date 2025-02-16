@@ -4,7 +4,7 @@ use colored::Colorize;
 
 use crate::ai::git::{git_stage_diff, git_stage_filenames};
 use crate::llm;
-use crate::llm::{Confirm, PromptModel};
+use crate::llm::{Confirm, PromptModelVendor};
 use crate::prompt::Prompt;
 
 mod git;
@@ -42,7 +42,7 @@ fn format_stat(label: &str, value: i64, emoji: &str) -> Option<String> {
 pub fn handler(
     push: bool,
     dry_run: bool,
-    vendor: Option<PromptModel>,
+    vendor: Option<PromptModelVendor>,
     model: Option<String>,
     prompt: Prompt,
     prefix: Option<String>,

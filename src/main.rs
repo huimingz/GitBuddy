@@ -1,4 +1,4 @@
-use crate::llm::PromptModel;
+use crate::llm::PromptModelVendor;
 use clap::{Parser, Subcommand};
 use prompt::Prompt;
 
@@ -19,7 +19,7 @@ struct Cli {
     command: Option<Commands>,
 
     #[arg(long)]
-    vendor: Option<PromptModel>,
+    vendor: Option<PromptModelVendor>,
 
     #[arg(short = 'm', long)]
     model: Option<String>,
@@ -46,7 +46,7 @@ enum Commands {
     },
     Config {
         #[arg(value_enum)]
-        vendor: llm::PromptModel,
+        vendor: llm::PromptModelVendor,
         #[arg(long)]
         api_key: String,
         #[arg(long)]

@@ -14,7 +14,7 @@ use std::io::Write;
 
 /// Prompt model
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, ValueEnum, Deserialize, Serialize)]
-pub enum PromptModel {
+pub enum PromptModelVendor {
     #[clap(name = "openai")]
     #[serde(rename = "openai")]
     OpenAI,
@@ -26,12 +26,12 @@ pub enum PromptModel {
     Ollama,
 }
 
-impl PromptModel {
+impl PromptModelVendor {
     pub fn default_model(&self) -> String {
         match self {
-            PromptModel::OpenAI => "gpt-3.5-turbo".to_string(),
-            PromptModel::DeepSeek => "deepseek-chat".to_string(),
-            PromptModel::Ollama => "ollama".to_string(),
+            PromptModelVendor::OpenAI => "gpt-3.5-turbo".to_string(),
+            PromptModelVendor::DeepSeek => "deepseek-chat".to_string(),
+            PromptModelVendor::Ollama => "ollama".to_string(),
         }
     }
 }
@@ -47,7 +47,7 @@ pub struct LLMResult {
 
 pub fn llm_request(
     diff_content: &str,
-    vendor: Option<PromptModel>,
+    vendor: Option<PromptModelVendor>,
     model: Option<String>,
     prompt: Prompt,
     prefix: Option<String>,
@@ -188,7 +188,7 @@ fn get_commit_separator(style: u8) -> (String, String, String) {
 }
 
 fn get_commit_message(
-    vendor: PromptModel,
+    vendor: PromptModelVendor,
     model: &str,
     api_key: &str,
     diff_content: &str,
