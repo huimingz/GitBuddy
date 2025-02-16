@@ -72,7 +72,7 @@ pub struct GlobalConfig {
     pub default: DefaultConfig,
 
     #[serde(rename = "vendor", default = "HashMap::new")]
-    pub vendors: HashMap<String, ModelConfig>,
+    pub vendors: HashMap<PromptModelVendor, ModelConfig>,
 
     /// OpenAI model configuration
     pub openai: Option<ModelConfig>,
@@ -133,8 +133,11 @@ impl GlobalConfig {
         }
     }
 
-    pub fn load_model(&self, vendor: String) -> Option<&ModelConfig> {
-        self.vendors.get(&vendor)
+    pub fn load_model(&self, vendor: Option<PromptModelVendor>) -> Option<&ModelConfig> {
+        match vendor {
+            Some(v) => self.vendors.get(&v),
+            None => self.vendors.get(&self.default.default_vendor),
+        }
     }
 
     pub fn model_params(&self) -> ModelParameters {

@@ -14,7 +14,7 @@ use serde::{Deserialize, Serialize};
 use std::io::Write;
 
 /// Prompt model
-#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, ValueEnum, Deserialize, Serialize)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, ValueEnum, Deserialize, Serialize, Hash)]
 pub enum PromptModelVendor {
     #[clap(name = "openai")]
     #[serde(rename = "openai")]
@@ -54,34 +54,25 @@ pub fn llm_request(
     prefix: Option<String>,
 ) -> Result<LLMResult> {
     let config = config::get_config()?;
-
-    let (model_config, prompt_model) = config
-        .model(vendor)
+    let model_config = config
+        .load_model(vendor)
         .expect("must load model config and prompt template");
 
-    let model = model.unwrap_or(model_config.model.clone());
-
-    get_commit_message(
-        prompt_model,
-        model.as_str(),
-        diff_content,
-        config.model_params(),
-        prompt,
-        prefix,
-        model_config,
-    )
+    let mut mc = model_config.clone();
+    if let Some(m) = model {
+        mc.model = m
+    }
+    get_commit_message(diff_content, config.model_params(), prompt, prefix, &mc)
 }
 
 fn get_commit_message(
-    vendor: PromptModelVendor,
-    model: &str,
     diff_content: &str,
     option: ModelParameters,
     prompt: Prompt,
     prefix: Option<String>,
     model_config: &ModelConfig,
 ) -> Result<LLMResult> {
-    let builder = OpenAICompatibleBuilder::new(vendor, model_config);
+    let builder = OpenAICompatibleBuilder::new(model_config);
 
     // generate http request
     let m = builder.build(prompt.value().to_string());
