@@ -239,7 +239,7 @@ pub fn confirm_commit<'a>(result: &'a LLMResult, _commit_message: &'a str) -> Re
         format!("[1-{}]", result.commit_messages.len()).bright_green(),
         "•".bright_yellow(),
         "(n: cancel)".bright_red(),
-        format!("⌲ Enter your choice (default: 1): ").bright_yellow()
+        "⌲ Enter your choice (default: 1): ".bright_yellow()
     );
     let mut input = String::new();
 
