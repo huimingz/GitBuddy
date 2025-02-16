@@ -1,6 +1,7 @@
 use crate::llm::PromptModelVendor;
 use anyhow::{anyhow, Result};
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 
 mod storage;
 mod vendor;
@@ -42,6 +43,7 @@ fn create_default_config() -> GlobalConfig {
             default_vendor: PromptModelVendor::DeepSeek,
             timeout: 30,
         },
+        vendors: HashMap::new(),
         openai: None,
         deepseek: None,
         ollama: None,
@@ -55,7 +57,7 @@ fn create_default_config() -> GlobalConfig {
 }
 
 /// Retrieves the global configuration from storage
-/// 
+///
 /// # Returns
 /// * `Ok(GlobalConfig)` if configuration was found and loaded successfully
 /// * `Err` if configuration was not found or could not be loaded
@@ -68,6 +70,10 @@ pub fn get_config() -> Result<GlobalConfig> {
 pub struct GlobalConfig {
     /// Default configuration settings
     pub default: DefaultConfig,
+
+    #[serde(rename = "vendor", default = "HashMap::new")]
+    pub vendors: HashMap<String, ModelConfig>,
+
     /// OpenAI model configuration
     pub openai: Option<ModelConfig>,
     /// DeepSeek model configuration
@@ -85,7 +91,7 @@ impl GlobalConfig {
     }
 
     /// Saves the current configuration to storage
-    /// 
+    ///
     /// # Returns
     /// * `Ok(())` if save was successful
     /// * `Err` if save failed
@@ -96,7 +102,7 @@ impl GlobalConfig {
     }
 
     /// Loads configuration from storage
-    /// 
+    ///
     /// # Returns
     /// * `Some(GlobalConfig)` if load was successful
     /// * `None` if load failed or config was not found
@@ -112,10 +118,10 @@ impl GlobalConfig {
     }
 
     /// Gets the model configuration for a specified vendor
-    /// 
+    ///
     /// # Arguments
     /// * `vendor` - Optional vendor to get configuration for. If None, uses default vendor
-    /// 
+    ///
     /// # Returns
     /// * `Some((&ModelConfig, PromptModelVendor))` if configuration exists for vendor
     /// * `None` if no configuration exists for vendor
@@ -125,6 +131,10 @@ impl GlobalConfig {
             PromptModelVendor::DeepSeek => self.deepseek.as_ref().map(|cfg| (cfg, PromptModelVendor::DeepSeek)),
             PromptModelVendor::Ollama => self.ollama.as_ref().map(|cfg| (cfg, PromptModelVendor::Ollama)),
         }
+    }
+
+    pub fn load_model(&self, vendor: String) -> Option<&ModelConfig> {
+        self.vendors.get(&vendor)
     }
 
     pub fn model_params(&self) -> ModelParameters {
