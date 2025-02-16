@@ -34,19 +34,40 @@ cargo install --git https://github.com/huimingz/GitBuddy.git
 
 ### Configuration
 
-To use GitBuddy, simply run the following command in your terminal:
+GitBuddy supports two ways to configure:
 
-**Using default model**
+1. Using command line:
 
 ```sh
+# Using default model
 gitbuddy config --api-key <your-api-key> deepseek
-```
 
-**Using custom model**
-
-```sh
+# Using custom model
 gitbuddy config --api-key <your-api-key> --model gpt-4 openai
 ```
+
+2. Using configuration file:
+
+GitBuddy will automatically look for a configuration file at `~/.config/gitbuddy/config.toml`. You can create this file manually or copy from the example configuration:
+
+```sh
+# Create config directory
+mkdir -p ~/.config/gitbuddy
+
+# Copy example config
+cp config.example.toml ~/.config/gitbuddy/config.toml
+
+# Edit the config file with your preferred editor
+vim ~/.config/gitbuddy/config.toml
+```
+
+The configuration file allows you to:
+- Set default AI service provider
+- Configure multiple AI providers
+- Customize model parameters
+- Set API endpoints and timeouts
+
+See `config.example.toml` in the repository for a complete example with detailed comments.
 
 ## Usage
 
