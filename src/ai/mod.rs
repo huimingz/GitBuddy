@@ -10,7 +10,8 @@ use crate::prompt::Prompt;
 mod git;
 
 fn get_stats_separator() -> String {
-    format!("{}  {}  {}",
+    format!(
+        "{}  {}  {}",
         "⚡".bright_yellow(),
         "Performance Stats".bright_cyan().bold(),
         "⚡".bright_yellow()
@@ -18,7 +19,8 @@ fn get_stats_separator() -> String {
 }
 
 fn get_command_message() -> String {
-    format!("{} {}  {}",
+    format!(
+        "{} {}  {}",
         "🎯".bright_yellow(),
         "Initializing AI Assistant".bright_cyan().bold(),
         "⚡".bright_yellow()
@@ -29,7 +31,8 @@ fn format_stat(label: &str, value: i64, emoji: &str) -> Option<String> {
     if value <= 0 {
         return None;
     }
-    Some(format!("{}  {}  {}",
+    Some(format!(
+        "{}  {}  {}",
         emoji.bright_yellow(),
         format!("{}: ", label).bright_cyan(),
         format!("{}", value).bright_green().bold()
