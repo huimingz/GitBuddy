@@ -1,9 +1,18 @@
 # Default settings
 [default]
 # Default AI vendor (deepseek, openai, ollama)
-default_vendor = "deepseek"
+default_vendor = "ollama"
 # Request timeout in seconds
 timeout = 30
+
+# Vendor-specific configurations
+[vendor]
+# You can add custom vendor configurations here
+# Example:
+# [vendor.custom]
+# api_key = "your-api-key"
+# model = "custom-model"
+# base_url = "https://api.custom.com/v1"
 
 # OpenAI configuration
 [openai]
