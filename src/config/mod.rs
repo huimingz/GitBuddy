@@ -7,7 +7,7 @@ mod storage;
 mod vendor;
 
 /// Update or create configuration for a specific model
-pub fn handler(vendor: &PromptModelVendor, api_key: &str, model: &str) -> Result<()> {
+pub fn handler(vendor: &PromptModelVendor, api_key: &str, model: String) -> Result<()> {
     let mut config = GlobalConfig::load().unwrap_or_else(|| create_default_config());
 
     let model_config = ModelConfig {
@@ -16,12 +16,7 @@ pub fn handler(vendor: &PromptModelVendor, api_key: &str, model: &str) -> Result
         base_url: get_default_base_url(vendor),
     };
 
-    match vendor {
-        PromptModelVendor::DeepSeek => config.deepseek = Some(model_config),
-        PromptModelVendor::OpenAI => config.openai = Some(model_config),
-        PromptModelVendor::Ollama => config.ollama = Some(model_config),
-    }
-
+    config.vendors.insert(model, model_config);
     config.save()?;
     println!("Config saved.");
     Ok(())

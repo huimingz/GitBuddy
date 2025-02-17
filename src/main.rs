@@ -72,7 +72,7 @@ fn main() {
                 vendor.default_model().to_string()
             };
 
-            config::handler(vendor, api_key, model.as_str()).unwrap();
+            config::handler(vendor, api_key, model).unwrap();
         }
         None => ai::handler(false, false, cli.vendor, cli.model, cli.prompt, cli.prefix).unwrap(),
     }
