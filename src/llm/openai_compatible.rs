@@ -1,5 +1,5 @@
 use crate::config::ModelParameters;
-use crate::llm::{formatter, LLMResult};
+use crate::llm::{formatter, theme, LLMResult};
 use anyhow::{anyhow, Result};
 use colored::Colorize;
 use regex::Regex;
@@ -133,7 +133,7 @@ impl OpenAICompatible {
         return if response.status().is_success() {
             let mut message = String::new();
             let reader = BufReader::new(response);
-            let (start_separator, end_separator) = formatter::get_stream_separator(3); // 使用方案2，可以改为1或3尝试其他效果
+            let (start_separator, end_separator) = theme::get_stream_separator(3); // 使用方案2，可以改为1或3尝试其他效果
             let mut usage = OpenAIResponseUsage::default();
             println!("{}", start_separator);
             for line in reader.lines() {
@@ -297,13 +297,13 @@ fn process_llm_response(response: String) -> Result<Vec<String>> {
                 // 添加可选的消息体
                 if let Some(body) = msg.body.filter(|s| !s.trim().is_empty()) {
                     commit.push_str("\n\n");
-                    commit.push_str(&formatter::wrap_text(body.trim(), 80));
+                    commit.push_str(&theme::wrap_text(body.trim(), 80));
                 }
 
                 // 添加可选的页脚
                 if let Some(footer) = msg.footer.filter(|s| !s.trim().is_empty()) {
                     commit.push_str("\n\n");
-                    commit.push_str(&formatter::wrap_text(footer.trim(), 80));
+                    commit.push_str(&theme::wrap_text(footer.trim(), 80));
                 }
 
                 commit

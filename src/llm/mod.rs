@@ -1,4 +1,3 @@
-mod formatter;
 mod openai_compatible;
 mod openai_compatible_builder;
 mod theme;
