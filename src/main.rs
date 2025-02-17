@@ -18,7 +18,7 @@ struct Cli {
     #[command(subcommand)]
     command: Option<Commands>,
 
-    #[arg(long)]
+    #[arg(short = 'v', long)]
     vendor: Option<PromptModelVendor>,
 
     #[arg(short = 'm', long)]
