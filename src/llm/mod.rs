@@ -51,7 +51,7 @@ pub fn llm_request(
     vendor: Option<String>,
     model: Option<String>,
     prompt: Prompt,
-    prefix: Option<String>,
+    hint: Option<String>,
 ) -> Result<LLMResult> {
     let config = config::get_config()?;
     let model_config = config
@@ -62,13 +62,13 @@ pub fn llm_request(
     if let Some(m) = model {
         mc.model = m
     }
-    get_commit_message(diff_content, prompt, prefix, &mc, config.model_params())
+    get_commit_message(diff_content, prompt, hint, &mc, config.model_params())
 }
 
 fn get_commit_message(
     diff_content: &str,
     prompt: Prompt,
-    prefix: Option<String>,
+    hint: Option<String>,
     model_config: &ModelConfig,
     model_option: ModelParameters,
 ) -> Result<LLMResult> {
@@ -77,7 +77,7 @@ fn get_commit_message(
     // generate http request
     let m = builder.build(prompt.value().to_string());
     let result = m
-        .request(diff_content, model_option, prefix)
+        .request(diff_content, model_option, hint)
         .map_err(|e| anyhow!("request failed: {:?}", e))?;
     Ok(result)
 }

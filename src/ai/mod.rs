@@ -45,7 +45,7 @@ pub fn handler(
     vendor: Option<String>,
     model: Option<String>,
     prompt: Prompt,
-    prefix: Option<String>,
+    hint: Option<String>,
 ) -> Result<(), Box<dyn std::error::Error>> {
     if !is_git_directory() {
         println!("Not git directory");
@@ -69,7 +69,7 @@ pub fn handler(
     println!("{}", get_command_message());
 
     let start = Instant::now();
-    let llm_result = llm::llm_request(&diff_content, vendor, model, prompt, prefix)?;
+    let llm_result = llm::llm_request(&diff_content, vendor, model, prompt, hint)?;
     let duration = start.elapsed();
 
     let separator = get_stats_separator();

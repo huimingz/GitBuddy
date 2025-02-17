@@ -85,7 +85,7 @@ impl OpenAICompatible {
         &self,
         diff_content: &str,
         option: ModelParameters,
-        prefix: Option<String>,
+        hint: Option<String>,
     ) -> Result<LLMResult, anyhow::Error> {
         let client = reqwest::blocking::Client::new();
 
@@ -100,11 +100,11 @@ impl OpenAICompatible {
                 content: format!("Generate commit message for these changes. If it's a new file, focus on its purpose rather than analyzing its content:\n```diff\n{diff_content}\n```"),
             },
         ];
-        if let Some(p) = prefix {
+        if let Some(p) = hint {
             println!("expect prefix: {p}");
             messages.push(Message {
                 role: String::from("user"),
-                content: format!("type of commit message must be {p}"),
+                content: format!("hint: {p}"),
             })
         }
         OpenAICompatible::print_configuration(&self.model, diff_content, &option, &self.url);
