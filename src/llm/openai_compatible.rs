@@ -107,11 +107,10 @@ impl OpenAICompatible {
                 content: format!("type of commit message must be {p}"),
             })
         }
-        let url = format!("{}/v1/chat/completions", self.url);
-        self.print_configuration(diff_content, &option, &url);
+        OpenAICompatible::print_configuration(&self.model, diff_content, &option, &self.url);
 
         let response = client
-            .post(url)
+            .post(&self.url)
             .timeout(Duration::from_secs(120))
             .header("Accept", "text/event-stream")
             .header("Authorization", format!("Bearer {api_key}",))
@@ -189,14 +188,14 @@ impl OpenAICompatible {
         };
     }
 
-    fn print_configuration(&self, diff_content: &str, option: &ModelParameters, url: &String) {
+    fn print_configuration(model: &String, diff_content: &str, option: &ModelParameters, url: &String) {
         println!(
             "\n{} {} {}",
             "⚙️".bright_cyan(),
             "LLM Configuration".bright_cyan().bold(),
             "🔮".bright_cyan()
         );
-        println!("  {} Model: {}", "🚀".bright_yellow(), self.model.bright_green().bold());
+        println!("  {} Model: {}", "🚀".bright_yellow(), model.bright_green().bold());
         println!(
             "  {} Max Tokens: {}",
             "⚡".bright_yellow(),
