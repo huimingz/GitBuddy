@@ -61,7 +61,7 @@ See `config.example.toml` in the repository for a complete example with detailed
 Using GitBuddy is straightforward. After making your changes, run the following command to generate a commit message:
 
 ```sh
-gitbuddy ai
+gitbuddy
 ```
 
 ### Commit Message Format
