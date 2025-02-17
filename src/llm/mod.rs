@@ -62,21 +62,21 @@ pub fn llm_request(
     if let Some(m) = model {
         mc.model = m
     }
-    get_commit_message(diff_content, config.model_params(), prompt, prefix, &mc)
+    get_commit_message(diff_content, prompt, prefix, &mc, config.model_params())
 }
 
 fn get_commit_message(
     diff_content: &str,
-    option: ModelParameters,
     prompt: Prompt,
     prefix: Option<String>,
     model_config: &ModelConfig,
+    model_option: ModelParameters,
 ) -> Result<LLMResult> {
     let builder = OpenAICompatibleBuilder::new(model_config);
 
     // generate http request
     let m = builder.build(prompt.value().to_string());
-    let result = m.request(diff_content, option, prefix)?;
+    let result = m.request(diff_content, model_option, prefix)?;
     Ok(result)
 }
 
