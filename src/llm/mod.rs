@@ -48,7 +48,7 @@ pub struct LLMResult {
 
 pub fn llm_request(
     diff_content: &str,
-    vendor: Option<PromptModelVendor>,
+    vendor: Option<String>,
     model: Option<String>,
     prompt: Prompt,
     prefix: Option<String>,
