@@ -48,10 +48,11 @@ vim ~/.config/gitbuddy/config.toml
 ```
 
 The configuration file allows you to:
-- Set default AI service provider
-- Configure multiple AI providers
-- Customize model parameters
-- Set API endpoints and timeouts
+- Set default AI service provider and timeout settings
+- Configure built-in AI providers (OpenAI, DeepSeek, Ollama)
+- Add custom vendor configurations
+- Customize model parameters (temperature, top_p, top_k, max_tokens)
+- Set API endpoints and authentication
 
 See `config.example.toml` in the repository for a complete example with detailed comments.
 
