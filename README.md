@@ -49,10 +49,10 @@ vim ~/.config/gitbuddy/config.toml
 
 The configuration file allows you to:
 - Set default AI service provider and timeout settings
-- Configure built-in AI providers (OpenAI, DeepSeek, Ollama)
-- Add custom vendor configurations
+- Define custom LLM vendors using a flexible HashMap structure
+- Configure multiple vendors with their own API keys, models, and endpoints
+- Add any OpenAI-compatible API service as a new vendor
 - Customize model parameters (temperature, top_p, top_k, max_tokens)
-- Set API endpoints and authentication
 
 See `config.example.toml` in the repository for a complete example with detailed comments.
 
@@ -89,14 +89,22 @@ Where `type` can be:
 
 ## Support models
 
-| Vendor      | Model(s)                        | Support |
-|-------------|---------------------------------|:-------:|
-| DeepSeek    | deepseek-chat                   |   yes   |
-| OpenAI      | gpt-3.5-turbo                   |   no    |
-| ByteDance   | Doubao-lite-4k<br>Doubao-pro-4k |   no    |
-| Baidu       | ERNIE 4.0                       |   no    |
-| Alibaba     | qwen-turbo                      |   no    |
-| Moonshot AI | moonshot-v1-8k                  |   no    |
+GitBuddy supports any OpenAI-compatible API service. You can configure multiple vendors in the `[vendors]` section of your config file. Here are some examples:
+
+| Vendor Type | Example Services |
+|-------------|------------------|
+| Local LLM   | Ollama |
+| Cloud API   | OpenAI, DeepSeek, Claude |
+| Self-hosted | LMStudio, vLLM, FastChat |
+
+To add a new vendor, simply create a new section in your config file:
+
+```toml
+[vendors.your_vendor]
+api_key = "your-api-key"
+model = "your-model-name"
+base_url = "https://your-api-endpoint/v1"
+```
 
 ## Roadmap
 

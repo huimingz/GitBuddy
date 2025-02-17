@@ -1,45 +1,37 @@
 # Default settings
 [default]
-# Default AI vendor (deepseek, openai, ollama)
+# Default AI vendor name (must match a vendor key in the vendors table)
 default_vendor = "ollama"
 # Request timeout in seconds
 timeout = 30
 
-# Vendor-specific configurations
-[vendor]
-# You can add custom vendor configurations here
-# Example:
-# [vendor.custom]
-# api_key = "your-api-key"
-# model = "custom-model"
-# base_url = "https://api.custom.com/v1"
+# Custom vendor configurations
+# Each vendor is defined as a table under [vendors.name]
+[vendors]
 
-# OpenAI configuration
-[openai]
-# Your OpenAI API key
+# Example: OpenAI-compatible API vendor
+[vendors.openai]
 api_key = "sk-xxx"
-# Model name (e.g., "gpt-3.5-turbo", "gpt-4")
 model = "gpt-3.5-turbo"
-# API base URL, change this if you're using a proxy
 base_url = "https://api.openai.com/v1"
 
-# DeepSeek configuration
-[deepseek]
-# Your DeepSeek API key
+# Example: DeepSeek vendor
+[vendors.deepseek]
 api_key = "sk-xxx"
-# Model name (e.g., "deepseek-chat")
 model = "deepseek-chat"
-# API base URL
 base_url = "https://api.deepseek.com/v1"
 
-# Ollama configuration (local LLM)
-[ollama]
-# No API key needed for Ollama
+# Example: Local Ollama vendor
+[vendors.ollama]
 api_key = ""
-# Model name (e.g., "llama2", "mistral")
 model = "llama2"
-# Local Ollama server URL
 base_url = "http://localhost:11434"
+
+# Example: Custom vendor (e.g., self-hosted LLM)
+[vendors.custom]
+api_key = "your-api-key"
+model = "your-model"
+base_url = "http://your-llm-server:8000/v1"
 
 # Model parameters for AI response
 [model_parameters]

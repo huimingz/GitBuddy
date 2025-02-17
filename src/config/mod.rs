@@ -39,9 +39,6 @@ fn create_default_config() -> GlobalConfig {
             timeout: 30,
         },
         vendors: HashMap::new(),
-        openai: None,
-        deepseek: None,
-        ollama: None,
         model_parameters: Some(ModelParameters {
             temperature: 0.1,
             top_p: 0.75,
@@ -69,12 +66,6 @@ pub struct GlobalConfig {
     #[serde(rename = "vendor", default = "HashMap::new")]
     pub vendors: HashMap<String, ModelConfig>,
 
-    /// OpenAI model configuration
-    pub openai: Option<ModelConfig>,
-    /// DeepSeek model configuration
-    pub deepseek: Option<ModelConfig>,
-    /// Ollama model configuration
-    pub ollama: Option<ModelConfig>,
     /// Model parameters for inference
     pub model_parameters: Option<ModelParameters>,
 }
