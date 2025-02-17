@@ -6,7 +6,7 @@ mod theme;
 use crate::config;
 use crate::config::{ModelConfig, ModelParameters};
 use crate::prompt::Prompt;
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use clap::ValueEnum;
 use colored::Colorize;
 use openai_compatible_builder::OpenAICompatibleBuilder;
@@ -76,7 +76,9 @@ fn get_commit_message(
 
     // generate http request
     let m = builder.build(prompt.value().to_string());
-    let result = m.request(diff_content, model_option, prefix)?;
+    let result = m
+        .request(diff_content, model_option, prefix)
+        .map_err(|e| anyhow!("request failed: {:?}", e))?;
     Ok(result)
 }
 

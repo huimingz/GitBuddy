@@ -69,7 +69,7 @@ pub fn handler(
     println!("{}", get_command_message());
 
     let start = Instant::now();
-    let llm_result = llm::llm_request(&diff_content, vendor, model, prompt, prefix).expect("request llm success");
+    let llm_result = llm::llm_request(&diff_content, vendor, model, prompt, prefix)?;
     let duration = start.elapsed();
 
     let separator = get_stats_separator();

@@ -40,7 +40,7 @@ fn get_default_base_url(vendor: &PromptModelVendor) -> String {
 fn create_default_config() -> GlobalConfig {
     GlobalConfig {
         default: DefaultConfig {
-            default_vendor: PromptModelVendor::DeepSeek,
+            default_vendor: String::from("ollama"),
             timeout: 30,
         },
         vendors: HashMap::new(),
@@ -159,7 +159,7 @@ impl ModelConfig {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct DefaultConfig {
     /// Default model vendor to use
-    pub default_vendor: PromptModelVendor,
+    pub default_vendor: String,
     /// Request timeout in seconds
     pub timeout: u64,
 }

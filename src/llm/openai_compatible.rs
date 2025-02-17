@@ -22,7 +22,7 @@ struct OpenAIStreamResponse {
     id: String,
     model: String, // 生成该 completion 的模型名
     object: String,
-    system_fingerprint: String, // This fingerprint represents the backend configuration that the model runs with.
+    system_fingerprint: Option<String>, // This fingerprint represents the backend configuration that the model runs with.
     choices: Vec<OpenAIStreamChoice>,
     usage: Option<OpenAIResponseUsage>,
     created: i64, // 创建聊天完成时的 Unix 时间戳（以秒为单位）
@@ -144,6 +144,7 @@ impl OpenAICompatible {
                         break;
                     }
 
+                    // println!("sse data: {}", payload);
                     let data: OpenAIStreamResponse = serde_json::from_str(payload)?;
                     for choice in data.choices {
                         print!("{}", choice.delta.content.cyan());
