@@ -1,5 +1,5 @@
 use crate::config::ModelParameters;
-use crate::llm::{formatter, theme, LLMResult};
+use crate::llm::{theme, LLMResult};
 use anyhow::{anyhow, Result};
 use colored::Colorize;
 use regex::Regex;

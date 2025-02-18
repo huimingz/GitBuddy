@@ -1,3 +1,6 @@
+mod baichuan;
+mod deepseek;
+mod ollama;
 mod openai_compatible;
 mod openai_compatible_builder;
 mod theme;
