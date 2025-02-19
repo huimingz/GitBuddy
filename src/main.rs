@@ -29,7 +29,7 @@ struct Cli {
     #[arg(long = "hint")]
     hint: Option<String>,
 
-    #[arg(short = 'n', long = "number", default = 3)]
+    #[arg(short = 'n', long = "number", default_value_t = 3)]
     number: u8,
 }
 
