@@ -28,6 +28,9 @@ struct Cli {
 
     #[arg(long = "hint")]
     hint: Option<String>,
+
+    #[arg(short = 'n', long = "number", default = 3)]
+    number: u8,
 }
 
 #[derive(Subcommand)]
@@ -62,7 +65,7 @@ fn main() {
             dry_run,
             // vendor,
         }) => {
-            ai::handler(*push, *dry_run, cli.vendor, cli.model, cli.prompt, cli.hint).unwrap();
+            ai::handler(*push, *dry_run, cli.vendor, cli.model, cli.prompt, cli.hint, cli.number).unwrap();
         }
         Some(Commands::Config { vendor, api_key, model }) => {
             let model = if let Some(model) = model {
@@ -73,6 +76,6 @@ fn main() {
 
             config::handler(vendor, api_key, model).unwrap();
         }
-        None => ai::handler(false, false, cli.vendor, cli.model, cli.prompt, cli.hint).unwrap(),
+        None => ai::handler(false, false, cli.vendor, cli.model, cli.prompt, cli.hint, cli.number).unwrap(),
     }
 }

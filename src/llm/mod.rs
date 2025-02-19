@@ -54,6 +54,7 @@ pub fn llm_request(
     model: Option<String>,
     prompt: Prompt,
     hint: Option<String>,
+    number: u8,
 ) -> Result<LLMResult> {
     let config = config::get_config()?;
     let model_config = config

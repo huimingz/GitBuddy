@@ -41,7 +41,7 @@ impl Prompt {
     }
 }
 
-pub const PROMPT: &str = r###"Generate 3 to 5 commit messages following the Conventional Commits specification (https://www.conventionalcommits.org/).
+pub const PROMPT: &str = r###"Generate 3 commit messages following the Conventional Commits specification (https://www.conventionalcommits.org/).
 
 Format for each message object:
 {
