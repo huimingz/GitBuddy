@@ -68,10 +68,8 @@ pub fn handler(
     // let diff_content = format!("Code changes: \n```\n{}\n```", git_stage_diff());
 
     println!("{}", get_command_message());
-
     let start = Instant::now();
     let llm_result = llm::llm_request(&diff_content, vendor, model, prompt, hint, number)?;
-
     theme::print_stats(&llm_result, start.elapsed());
 
     let confirm = llm::confirm_commit(&llm_result)?;
