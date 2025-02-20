@@ -11,6 +11,7 @@ use crate::prompt::Prompt;
 use anyhow::{anyhow, Result};
 use clap::ValueEnum;
 use colored::Colorize;
+use minijinja::{context, Environment};
 use openai_compatible_builder::OpenAICompatibleBuilder;
 use serde::{Deserialize, Serialize};
 use std::io::Write;
@@ -65,7 +66,7 @@ pub fn llm_request(
     if let Some(m) = model {
         mc.model = m
     }
-    get_commit_message(diff_content, prompt, hint, &mc, config.model_params())
+    get_commit_message(diff_content, prompt, hint, &mc, config.model_params(), number)
 }
 
 fn get_commit_message(
@@ -74,11 +75,21 @@ fn get_commit_message(
     hint: Option<String>,
     model_config: &ModelConfig,
     model_option: ModelParameters,
+    number: u8,
 ) -> Result<LLMResult> {
     let builder = OpenAICompatibleBuilder::new(model_config);
 
     // generate http request
-    let m = builder.build(prompt.value().to_string());
+    let p = prompt.value();
+
+    let mut env = Environment::new();
+    env.add_template("prompt", p)?;
+    let tmpl = env.get_template("prompt")?;
+    let rendered = tmpl.render(context!(number => number))?;
+
+    println!("prompt: {}", rendered);
+
+    let m = builder.build(rendered);
     let result = m
         .request(diff_content, model_option, hint)
         .map_err(|e| anyhow!("request failed: {:?}", e))?;
