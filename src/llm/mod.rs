@@ -8,7 +8,7 @@ mod theme;
 use crate::config;
 use crate::config::{ModelConfig, ModelParameters};
 use crate::prompt::Prompt;
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, Error, Result};
 use clap::ValueEnum;
 use colored::Colorize;
 use minijinja::{context, Environment};
@@ -80,20 +80,23 @@ fn get_commit_message(
     let builder = OpenAICompatibleBuilder::new(model_config);
 
     // generate http request
+
+    let rendered_prompt = render_prompt(prompt, number)?;
+    let m = builder.build(rendered_prompt);
+    let result = m
+        .request(diff_content, model_option, hint)
+        .map_err(|e| anyhow!("request failed: {:?}", e))?;
+    Ok(result)
+}
+
+fn render_prompt(prompt: Prompt, number: u8) -> Result<String, Error> {
     let p = prompt.value();
 
     let mut env = Environment::new();
     env.add_template("prompt", p)?;
     let tmpl = env.get_template("prompt")?;
     let rendered = tmpl.render(context!(number => number))?;
-
-    println!("prompt: {}", rendered);
-
-    let m = builder.build(rendered);
-    let result = m
-        .request(diff_content, model_option, hint)
-        .map_err(|e| anyhow!("request failed: {:?}", e))?;
-    Ok(result)
+    Ok(rendered)
 }
 
 pub enum Confirm<'a> {
