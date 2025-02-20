@@ -1,5 +1,6 @@
 mod baichuan;
 mod deepseek;
+mod interaction;
 mod ollama;
 mod openai_compatible;
 mod openai_compatible_builder;
@@ -105,7 +106,7 @@ pub enum Confirm<'a> {
     Exit,
 }
 
-pub fn confirm_commit<'a>(result: &'a LLMResult, _commit_message: &'a str) -> Result<Confirm<'a>, &'static str> {
+pub fn confirm_commit<'a>(result: &'a LLMResult) -> Result<Confirm<'a>, &'static str> {
     theme::print_commit_options(result, theme::DEFAULT_COMMIT_OPTION_STYLE);
     let input = user_choice(result);
     match input.as_str() {

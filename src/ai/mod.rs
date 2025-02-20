@@ -1,6 +1,5 @@
-use std::time::Instant;
-
 use colored::Colorize;
+use std::time::Instant;
 
 use crate::ai::git::{git_stage_diff, git_stage_filenames};
 use crate::llm;
@@ -8,6 +7,7 @@ use crate::llm::Confirm;
 use crate::prompt::Prompt;
 
 mod git;
+mod theme;
 
 fn get_stats_separator() -> String {
     format!(
@@ -71,33 +71,10 @@ pub fn handler(
 
     let start = Instant::now();
     let llm_result = llm::llm_request(&diff_content, vendor, model, prompt, hint, number)?;
-    let duration = start.elapsed();
 
-    let separator = get_stats_separator();
-    let mut stats = Vec::new();
-    if let Some(stat) = format_stat("Duration", duration.as_millis() as i64, "⏱️") {
-        stats.push(stat);
-    }
-    if let Some(stat) = format_stat("Usage", llm_result.total_tokens, "💰") {
-        stats.push(stat);
-    }
-    if let Some(stat) = format_stat("Completion", llm_result.completion_tokens, "🎯") {
-        stats.push(stat);
-    }
-    if let Some(stat) = format_stat("Prompt Tokens", llm_result.prompt_tokens, "🔤") {
-        stats.push(stat);
-    }
+    theme::print_stats(&llm_result, start.elapsed());
 
-    if !stats.is_empty() {
-        println!("\n{}", separator);
-        for stat in stats {
-            println!("  {}", stat);
-        }
-        println!();
-    }
-
-    let confirm = llm::confirm_commit(&llm_result, llm_result.commit_message.as_str()).unwrap();
-
+    let confirm = llm::confirm_commit(&llm_result)?;
     let commit_message = match confirm {
         Confirm::Retry | Confirm::Exit => {
             println!("{}", "Cancel commit".red());
