@@ -75,7 +75,7 @@ Rules for Conventional Commits:
    - Breaking changes MUST be indicated in footer
 
 3. Technical Requirements:
-   - Response MUST be valid JSON array with 3-5 messages
+   - Response MUST be valid JSON array with {{ number }} messages
    - Wrap response in ```json
    - Use \" for quotes in strings
    - Use \n for newlines in strings
