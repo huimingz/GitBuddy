@@ -56,7 +56,7 @@ pub fn llm_request(
     model: Option<String>,
     prompt: Prompt,
     hint: Option<String>,
-    number: u8,
+    number_of_commit_options: u8,
 ) -> Result<LLMResult> {
     let config = config::get_config()?;
     let model_config = config
@@ -67,7 +67,14 @@ pub fn llm_request(
     if let Some(m) = model {
         mc.model = m
     }
-    get_commit_message(diff_content, prompt, hint, &mc, config.model_params(), number)
+    get_commit_message(
+        diff_content,
+        prompt,
+        hint,
+        &mc,
+        config.model_params(),
+        number_of_commit_options,
+    )
 }
 
 fn get_commit_message(
@@ -76,13 +83,13 @@ fn get_commit_message(
     hint: Option<String>,
     model_config: &ModelConfig,
     model_option: ModelParameters,
-    number: u8,
+    number_of_commit_options: u8,
 ) -> Result<LLMResult> {
     let builder = OpenAICompatibleBuilder::new(model_config);
 
     // generate http request
 
-    let rendered_prompt = render_prompt(prompt, number)?;
+    let rendered_prompt = render_prompt(prompt, number_of_commit_options)?;
     let m = builder.build(rendered_prompt);
     let result = m
         .request(diff_content, model_option, hint)
