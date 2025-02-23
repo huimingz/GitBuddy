@@ -46,7 +46,7 @@ pub fn handler(
     model: Option<String>,
     prompt: Prompt,
     hint: Option<String>,
-    number: u8,
+    number_of_commit_count: u8,
 ) -> Result<(), Box<dyn std::error::Error>> {
     if !is_git_directory() {
         println!("Not git directory");
@@ -69,7 +69,7 @@ pub fn handler(
 
     println!("{}", get_command_message());
     let start = Instant::now();
-    let llm_result = llm::llm_request(&diff_content, vendor, model, prompt, hint, number)?;
+    let llm_result = llm::llm_request(&diff_content, vendor, model, prompt, hint, number_of_commit_count)?;
     theme::print_stats(&llm_result, start.elapsed());
 
     let confirm = llm::confirm_commit(&llm_result)?;
