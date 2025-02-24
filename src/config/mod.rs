@@ -37,7 +37,7 @@ fn create_default_config() -> GlobalConfig {
         default: DefaultConfig {
             default_vendor: String::from("ollama"),
             timeout: 30,
-            number_of_commit_options: 3,
+            // number_of_commit_options: 3,
         },
         vendors: HashMap::new(),
         model_parameters: Some(ModelParameters {
@@ -149,9 +149,9 @@ pub struct DefaultConfig {
     pub default_vendor: String,
     /// Request timeout in seconds
     pub timeout: u64,
-    /// Number of commit options, defaults to 3
-    #[serde(default = 3)]
-    pub number_of_commit_options: u8,
+    // Number of commit options, defaults to 3
+    // #[serde(default = )]
+    // pub number_of_commit_options: u8,
 }
 
 /// Parameters for model inference

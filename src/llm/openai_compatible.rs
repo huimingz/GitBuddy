@@ -15,6 +15,34 @@ pub(crate) struct OpenAICompatible {
     pub(crate) model: String,
     pub(crate) prompt: String,
     pub(crate) api_key: String,
+    pub(crate) client: reqwest::blocking::Client,
+}
+
+pub struct OpenAI {
+    base_url: String,
+    model: String,
+    api_key: String,
+    client: reqwest::Client,
+}
+
+impl OpenAI {
+    pub fn new(base_url: String, model: String, api_key: String) -> OpenAI {
+        OpenAI {
+            base_url,
+            model,
+            api_key,
+            client: reqwest::Client::new(),
+        }
+    }
+
+    pub fn new_with_client(client: reqwest::Client, base_url: String, model: String, api_key: String) -> OpenAI {
+        OpenAI {
+            base_url,
+            model,
+            api_key,
+            client,
+        }
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize, Default)]
@@ -87,9 +115,10 @@ impl OpenAICompatible {
         option: ModelParameters,
         hint: Option<String>,
     ) -> Result<LLMResult, anyhow::Error> {
-        let client = reqwest::blocking::Client::new();
+        OpenAICompatible::print_configuration(&self.model, diff_content, &option, &self.url);
 
-        let api_key = self.api_key.clone();
+        // let client = reqwest::blocking::Client::new();
+
         let mut messages: Vec<Message> = vec![
             Message {
                 role: String::from("system"),
@@ -107,26 +136,28 @@ impl OpenAICompatible {
                 content: format!("hint: {p}"),
             })
         }
-        OpenAICompatible::print_configuration(&self.model, diff_content, &option, &self.url);
 
-        let response = client
+        let payload = &json!({
+            "model": &self.model,
+            "messages": messages,
+            "options": {
+                "temperature": option.temperature,
+                "top_p": option.top_p,
+                "top_k": option.top_k,
+            },
+            "options": option,
+            "keep_alive": "30m",
+            "max_tokens": option.max_tokens,
+            "stream": true,
+        });
+
+        let response = self
+            .client
             .post(&self.url)
             .timeout(Duration::from_secs(120))
             .header("Accept", "text/event-stream")
-            .header("Authorization", format!("Bearer {api_key}",))
-            .json(&json!({
-                "model": &self.model,
-                "messages": messages,
-                "options": {
-                    "temperature": option.temperature,
-                    "top_p": option.top_p,
-                    "top_k": option.top_k,
-                },
-                "options": option,
-                "keep_alive": "30m",
-                "max_tokens": option.max_tokens,
-                "stream": true,
-            }))
+            .header("Authorization", format!("Bearer {}", self.api_key))
+            .json(payload)
             .send()
             .expect("Error sending request");
 

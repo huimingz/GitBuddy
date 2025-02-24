@@ -22,6 +22,7 @@ impl OpenAICompatibleBuilder {
             model: self.model,
             prompt: prompt,
             api_key: self.api_key,
+            client: reqwest::blocking::Client::new(),
         }
     }
 }
