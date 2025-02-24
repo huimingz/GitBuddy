@@ -4,7 +4,7 @@ use anyhow::{anyhow, Result};
 use colored::Colorize;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
-use serde_json::json;
+use serde_json::{json, Value};
 use std::io;
 use std::io::{BufRead, BufReader, Write};
 use std::time::Duration;
@@ -109,6 +109,35 @@ struct Message {
 }
 
 impl OpenAICompatible {
+    pub fn chat_completions(&self, payload: &Value) -> Result<impl Iterator<Item = String>> {
+        let response = self
+            .client
+            .post(&self.url)
+            .header("Accept", "text/event-stream")
+            .header("Content-Type", "application/json")
+            .header("Authorization", format!("Bearer {}", self.api_key))
+            .json(payload)
+            .send()?;
+
+        if !response.status().is_success() {
+            return Err(anyhow!("HTTP request failed with status code {}", response.status()));
+        }
+
+        let reader = BufReader::new(response);
+        Ok(reader
+            .lines()
+            .filter_map(|l| {
+                l.ok().and_then(|s| {
+                    if s.starts_with("data: ") {
+                        Some(s["data: ".len()..].to_string())
+                    } else {
+                        None
+                    }
+                })
+            })
+            .filter(|s| s != "[DONE]"))
+    }
+
     pub(crate) fn request(
         &self,
         diff_content: &str,
@@ -151,73 +180,119 @@ impl OpenAICompatible {
             "stream": true,
         });
 
-        let response = self
-            .client
-            .post(&self.url)
-            .timeout(Duration::from_secs(120))
-            .header("Accept", "text/event-stream")
-            .header("Authorization", format!("Bearer {}", self.api_key))
-            .json(payload)
-            .send()
-            .expect("Error sending request");
+        let mut message = String::new();
 
-        return if response.status().is_success() {
-            let mut message = String::new();
-            let reader = BufReader::new(response);
-            let (start_separator, end_separator) = theme::get_stream_separator(3); // 使用方案2，可以改为1或3尝试其他效果
-            let mut usage = OpenAIResponseUsage::default();
-            println!("{}", start_separator);
-            for line in reader.lines() {
-                let line = line?;
-                if line.starts_with("data: ") {
-                    let payload = line.trim_start_matches("data: ");
-                    if payload == "[DONE]" {
-                        break;
-                    }
+        let (start_separator, end_separator) = theme::get_stream_separator(3); // 使用方案2，可以改为1或3尝试其他效果
+        let mut usage = OpenAIResponseUsage::default();
+        println!("{}", start_separator);
 
-                    // println!("sse data: {}", payload);
-                    let data: OpenAIStreamResponse = serde_json::from_str(payload)?;
-                    for choice in data.choices {
-                        print!("{}", choice.delta.content.cyan());
-                        io::stdout().flush()?; // 强制刷新到终端，确保每次打印都显示
-                        message.push_str(choice.delta.content.as_str());
-                    }
-                    if let Some(u) = data.usage {
-                        usage.total_tokens += u.total_tokens;
-                        usage.prompt_tokens += u.prompt_tokens;
-                        usage.completion_tokens += u.completion_tokens;
-                    }
-                }
+        for line in self.chat_completions(payload)? {
+            if line.is_empty() {
+                continue;
             }
-            println!("\n{}", end_separator);
+            let data: OpenAIStreamResponse = serde_json::from_str(&line)?;
+            for choice in data.choices {
+                print!("{}", choice.delta.content.cyan());
+                io::stdout().flush()?; // 强制刷新到终端，确保每次打印都显示
+                message.push_str(choice.delta.content.as_str());
+            }
+            if let Some(u) = data.usage {
+                usage.total_tokens += u.total_tokens;
+                usage.prompt_tokens += u.prompt_tokens;
+                usage.completion_tokens += u.completion_tokens;
+            }
+        }
 
-            let re = Regex::new(r"(?s)<think>.*?</think>")
-                .map_err(|e| format!("invalid regex, err: {e}"))
-                .unwrap();
-            let message = re.replace_all(&message.trim(), "").trim().to_string();
-            let messages = process_llm_response(message.clone())?;
+        println!("\n{}", end_separator);
 
-            Ok(LLMResult {
-                completion_tokens: usage.completion_tokens,
-                prompt_tokens: usage.prompt_tokens,
-                total_tokens: usage.total_tokens,
-                commit_message: message,
-                commit_messages: messages,
-            })
-        } else {
-            let status_code = response.status();
-            let reason = match response.text() {
-                Ok(text) => text,
-                Err(e) => {
-                    return Err(anyhow!("Error: {:?}", e.to_string().truncate(100)));
-                }
-            };
-            return Err(anyhow!(
-                "Error occurred in request, reason: '{}', status code: {}",
-                reason,
-                status_code
-            ));
-        };
+        println!(
+            "\n{} {} {}",
+            "⚙️".bright_cyan(),
+            "LLM Response: \n".bright_cyan().bold(),
+            message.bright_cyan(),
+        );
+
+        let re = Regex::new(r"(?s)<think>.*?</think>")
+            .map_err(|e| format!("invalid regex, err: {e}"))
+            .unwrap();
+        let message = re.replace_all(&message.trim(), "").trim().to_string();
+        let messages = process_llm_response(message.clone())?;
+
+        Ok(LLMResult {
+            completion_tokens: usage.completion_tokens,
+            prompt_tokens: usage.prompt_tokens,
+            total_tokens: usage.total_tokens,
+            commit_message: message,
+            commit_messages: messages,
+        })
+
+        // let response = self
+        //     .client
+        //     .post(&self.url)
+        //     .timeout(Duration::from_secs(120))
+        //     .header("Accept", "text/event-stream")
+        //     .header("Authorization", format!("Bearer {}", self.api_key))
+        //     .json(payload)
+        //     .send()
+        //     .expect("Error sending request");
+        //
+        // return if response.status().is_success() {
+        //     let mut message = String::new();
+        //     let reader = BufReader::new(response);
+        //     let (start_separator, end_separator) = theme::get_stream_separator(3); // 使用方案2，可以改为1或3尝试其他效果
+        //     let mut usage = OpenAIResponseUsage::default();
+        //     println!("{}", start_separator);
+        //     for line in reader.lines() {
+        //         let line = line?;
+        //         if line.starts_with("data: ") {
+        //             let payload = line.trim_start_matches("data: ");
+        //             if payload == "[DONE]" {
+        //                 break;
+        //             }
+        //
+        //             // println!("sse data: {}", payload);
+        //             let data: OpenAIStreamResponse = serde_json::from_str(payload)?;
+        //             for choice in data.choices {
+        //                 print!("{}", choice.delta.content.cyan());
+        //                 io::stdout().flush()?; // 强制刷新到终端，确保每次打印都显示
+        //                 message.push_str(choice.delta.content.as_str());
+        //             }
+        //             if let Some(u) = data.usage {
+        //                 usage.total_tokens += u.total_tokens;
+        //                 usage.prompt_tokens += u.prompt_tokens;
+        //                 usage.completion_tokens += u.completion_tokens;
+        //             }
+        //         }
+        //     }
+        //     println!("\n{}", end_separator);
+        //
+        //     let re = Regex::new(r"(?s)<think>.*?</think>")
+        //         .map_err(|e| format!("invalid regex, err: {e}"))
+        //         .unwrap();
+        //     let message = re.replace_all(&message.trim(), "").trim().to_string();
+        //     let messages = process_llm_response(message.clone())?;
+        //
+        //     Ok(LLMResult {
+        //         completion_tokens: usage.completion_tokens,
+        //         prompt_tokens: usage.prompt_tokens,
+        //         total_tokens: usage.total_tokens,
+        //         commit_message: message,
+        //         commit_messages: messages,
+        //     })
+        // } else {
+        //     let status_code = response.status();
+        //     let reason = match response.text() {
+        //         Ok(text) => text,
+        //         Err(e) => {
+        //             return Err(anyhow!("Error: {:?}", e.to_string().truncate(100)));
+        //         }
+        //     };
+        //     return Err(anyhow!(
+        //         "Error occurred in request, reason: '{}', status code: {}",
+        //         reason,
+        //         status_code
+        //     ));
+        // };
     }
 
     fn print_configuration(model: &String, diff_content: &str, option: &ModelParameters, url: &String) {
