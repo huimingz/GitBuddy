@@ -205,12 +205,12 @@ impl OpenAICompatible {
 
         println!("\n{}", end_separator);
 
-        println!(
-            "\n{} {} {}",
-            "⚙️".bright_cyan(),
-            "LLM Response: \n".bright_cyan().bold(),
-            message.bright_cyan(),
-        );
+        // println!(
+        //     "\n{} {} {}",
+        //     "⚙️".bright_cyan(),
+        //     "LLM Response: \n".bright_cyan().bold(),
+        //     message.bright_cyan(),
+        // );
 
         let re = Regex::new(r"(?s)<think>.*?</think>")
             .map_err(|e| format!("invalid regex, err: {e}"))
