@@ -1,5 +1,5 @@
 use crate::config::ModelParameters;
-use crate::llm::{theme, LLMResult};
+use crate::llm::{llm, theme, LLMResult};
 use anyhow::{anyhow, Result};
 use colored::Colorize;
 use regex::Regex;
@@ -109,7 +109,7 @@ struct Message {
 }
 
 impl OpenAICompatible {
-    pub fn chat_completions(&self, payload: &Value) -> Result<impl Iterator<Item = String>> {
+    pub fn chat(&self, payload: &Value) -> Result<impl Iterator<Item = String>> {
         let response = self
             .client
             .post(&self.url)
@@ -146,24 +146,11 @@ impl OpenAICompatible {
     ) -> Result<LLMResult, anyhow::Error> {
         OpenAICompatible::print_configuration(&self.model, diff_content, &option, &self.url);
 
-        // let client = reqwest::blocking::Client::new();
-
-        let mut messages: Vec<Message> = vec![
-            Message {
-                role: String::from("system"),
-                content: self.prompt.clone(),
-            },
-            Message {
-                role: String::from("user"),
-                content: format!("Generate commit message for these changes. If it's a new file, focus on its purpose rather than analyzing its content:\n```diff\n{diff_content}\n```"),
-            },
-        ];
+        let mut messages = Vec::new();
+        messages.push(llm::Message::new_system(self.prompt.clone()));
+        messages.push(llm::Message::new_user(format!("Generate commit message for these changes. If it's a new file, focus on its purpose rather than analyzing its content:\n```diff\n{diff_content}\n```")));
         if let Some(p) = hint {
-            println!("expect prefix: {p}");
-            messages.push(Message {
-                role: String::from("user"),
-                content: format!("hint: {p}"),
-            })
+            messages.push(llm::Message::new_user(format!("hint: {p}")));
         }
 
         let payload = &json!({
@@ -186,7 +173,7 @@ impl OpenAICompatible {
         let mut usage = OpenAIResponseUsage::default();
         println!("{}", start_separator);
 
-        for line in self.chat_completions(payload)? {
+        for line in self.chat(payload)? {
             if line.is_empty() {
                 continue;
             }
