@@ -1,4 +1,5 @@
 use crate::config::{ModelConfig, ModelParameters};
+use crate::llm::openai::OpenAIClient;
 use crate::llm::{llm, theme, LLMResult};
 use anyhow::{Error, Result};
 use colored::Colorize;
@@ -6,7 +7,6 @@ use regex::Regex;
 use serde::{Deserialize, Serialize};
 use std::io;
 use std::io::{BufRead, Write};
-use crate::llm::openai::OpenAIClient;
 
 #[derive(Debug)]
 pub(crate) struct OpenAICompatible {
@@ -15,66 +15,58 @@ pub(crate) struct OpenAICompatible {
 }
 
 #[derive(Debug, Serialize, Deserialize, Default)]
-struct OpenAIStreamResponse {
-    id: String,
-    model: String, // 生成该 completion 的模型名
-    object: String,
-    system_fingerprint: Option<String>, // This fingerprint represents the backend configuration that the model runs with.
-    choices: Vec<OpenAIStreamChoice>,
-    usage: Option<OpenAIResponseUsage>,
-    created: i64, // 创建聊天完成时的 Unix 时间戳（以秒为单位）
+pub struct OpenAIStreamResponse {
+    pub id: String,
+    pub model: String, // 生成该 completion 的模型名
+    pub object: String,
+    pub system_fingerprint: Option<String>, // This fingerprint represents the backend configuration that the model runs with.
+    pub choices: Vec<OpenAIStreamChoice>,
+    pub usage: Option<OpenAIResponseUsage>,
+    pub created: i64, // 创建聊天完成时的 Unix 时间戳（以秒为单位）
 }
 
 #[derive(Debug, Serialize, Deserialize, Default)]
-struct OpenAIStreamChoice {
-    index: i64,
-    delta: OpenAIChoiceDelta,
-    finish_reason: Option<String>, // 模型停止生成 token 的原因:stop/length/content_filter
+pub struct OpenAIStreamChoice {
+    pub index: i64,
+    pub delta: OpenAIChoiceDelta,
+    pub finish_reason: Option<String>, // 模型停止生成 token 的原因:stop/length/content_filter
 }
 
 #[derive(Debug, Serialize, Deserialize, Default)]
-struct OpenAIChoiceDelta {
-    role: Option<String>,
-    content: String,
+pub struct OpenAIChoiceDelta {
+    pub role: Option<String>,
+    pub content: String,
 }
 
 #[derive(Debug, Serialize, Deserialize, Default)]
-struct OpenAIResponse {
-    id: String,
-    model: String, // 生成该 completion 的模型名
-    object: String,
-    system_fingerprint: String, // This fingerprint represents the backend configuration that the model runs with.
-    choices: Vec<OpenAIResponseChoice>,
-    usage: OpenAIResponseUsage, // 该对话补全请求的用量信息
-    created: i64,               // 创建聊天完成时的 Unix 时间戳（以秒为单位）
+pub struct OpenAIResponse {
+    pub id: String,
+    pub model: String, // 生成该 completion 的模型名
+    pub object: String,
+    pub system_fingerprint: String, // This fingerprint represents the backend configuration that the model runs with.
+    pub choices: Vec<OpenAIResponseChoice>,
+    pub usage: OpenAIResponseUsage, // 该对话补全请求的用量信息
+    pub created: i64,               // 创建聊天完成时的 Unix 时间戳（以秒为单位）
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-struct OpenAIResponseChoice {
-    index: i64, // 该 completion 在模型生成的 completion 的选择列表中的索引。
-    message: OpenAIResponseChoiceMessage,
-    finish_reason: String, // 模型停止生成 token 的原因:stop/length/content_filter
+pub struct OpenAIResponseChoice {
+    pub index: i64, // 该 completion 在模型生成的 completion 的选择列表中的索引。
+    pub message: OpenAIResponseChoiceMessage,
+    pub finish_reason: String, // 模型停止生成 token 的原因:stop/length/content_filter
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-struct OpenAIResponseChoiceMessage {
-    role: String, // 角色:assistant
-    content: String,
+pub struct OpenAIResponseChoiceMessage {
+    pub role: String, // 角色:assistant
+    pub content: String,
 }
 
 #[derive(Debug, Serialize, Deserialize, Default)]
-struct OpenAIResponseUsage {
-    completion_tokens: i64,
-    prompt_tokens: i64,
-    total_tokens: i64,
-}
-
-#[derive(Serialize, Deserialize)]
-struct Message {
-    #[serde(rename = "role")]
-    role: String,
-    #[serde(rename = "content")]
-    content: String,
+pub struct OpenAIResponseUsage {
+    pub completion_tokens: i64,
+    pub prompt_tokens: i64,
+    pub total_tokens: i64,
 }
 
 impl OpenAICompatible {
