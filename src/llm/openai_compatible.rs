@@ -188,29 +188,8 @@ impl OpenAICompatible {
         let client = OpenAIClient::new_from_config(model_config, None);
 
         let messages = self.git_commit_prompt(diff_content, hint);
-        let mut output = String::new();
 
-        let mut usage = OpenAIResponseUsage::default();
-
-        let (start_separator, end_separator) = theme::get_stream_separator(3); // 使用方案2，可以改为1或3尝试其他效果
-        println!("{}", start_separator);
-        for line in client.chat(&self.model, messages, option)? {
-            if line.is_empty() {
-                continue;
-            }
-            let data: OpenAIStreamResponse = serde_json::from_str(&line)?;
-            for choice in data.choices {
-                print!("{}", choice.delta.content.cyan());
-                io::stdout().flush()?; // 强制刷新到终端，确保每次打印都显示
-                output.push_str(choice.delta.content.as_str());
-            }
-            if let Some(u) = data.usage {
-                usage.total_tokens += u.total_tokens;
-                usage.prompt_tokens += u.prompt_tokens;
-                usage.completion_tokens += u.completion_tokens;
-            }
-        }
-        println!("\n{}", end_separator);
+        let (output, usage) = self.stream_chat_response(option, client, messages)?;
 
         let re = Regex::new(r"(?s)<think>.*?</think>")
             .map_err(|e| format!("invalid regex, err: {e}"))
@@ -225,6 +204,32 @@ impl OpenAICompatible {
             commit_message: message,
             commit_messages: messages,
         })
+    }
+
+    fn stream_chat_response(&self, option: ModelParameters, client: OpenAIClient, messages: Vec<llm::Message>) -> Result<(String, OpenAIResponseUsage), Error> {
+        let mut output = String::new();
+        let mut usage = OpenAIResponseUsage::default();
+
+        let (start_separator, end_separator) = theme::get_stream_separator(3); // 使用方案2，可以改为1或3尝试其他效果
+        println!("{}", start_separator);
+        for line in client.chat(&self.model, messages, option)? {
+            if line.is_empty() {
+                continue;
+            }
+            let data: OpenAIStreamResponse = serde_json::from_str(&line)?;
+            for choice in data.choices {
+                print!("{}", choice.delta.content.cyan());
+                io::stdout().flush()?; // flush to terminal, ensure each print is visible
+                output.push_str(choice.delta.content.as_str());
+            }
+            if let Some(u) = data.usage {
+                usage.total_tokens += u.total_tokens;
+                usage.prompt_tokens += u.prompt_tokens;
+                usage.completion_tokens += u.completion_tokens;
+            }
+        }
+        println!("\n{}", end_separator);
+        Ok((output, usage))
     }
 
     fn git_commit_prompt(&self, diff_content: &str, hint: Option<String>) -> Vec<llm::Message> {
