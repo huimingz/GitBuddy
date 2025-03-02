@@ -65,12 +65,11 @@ impl OpenAIClient {
 
     pub fn chat(
         &self,
-        model: &String,
         messages: Vec<llm::Message>,
         option: ModelParameters,
     ) -> Result<impl Iterator<Item = String>> {
         let payload = &json!({
-            "model": model,
+            "model": self.model,
             "messages": messages,
             "options": {
                 "temperature": option.temperature,
@@ -212,7 +211,7 @@ impl OpenAICompatible {
 
         let (start_separator, end_separator) = theme::get_stream_separator(3); // 使用方案2，可以改为1或3尝试其他效果
         println!("{}", start_separator);
-        for line in client.chat(&self.model, messages, option)? {
+        for line in client.chat(messages, option)? {
             if line.is_empty() {
                 continue;
             }
