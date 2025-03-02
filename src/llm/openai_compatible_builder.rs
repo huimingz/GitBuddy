@@ -16,7 +16,6 @@ impl OpenAICompatibleBuilder {
 
     pub fn build(self, prompt: String) -> OpenAICompatible {
         OpenAICompatible {
-            url: self.url,
             model: self.model,
             prompt: prompt,
         }
