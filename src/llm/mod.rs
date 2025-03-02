@@ -93,7 +93,7 @@ fn get_commit_message(
     let rendered_prompt = render_prompt(prompt, number_of_commit_options)?;
     let m = builder.build(rendered_prompt);
     let result = m
-        .request(diff_content, model_option, hint)
+        .request(diff_content, model_config, model_option, hint)
         .map_err(|e| anyhow!("request failed: {:?}", e))?;
     Ok(result)
 }

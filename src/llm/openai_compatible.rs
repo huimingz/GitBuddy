@@ -1,12 +1,16 @@
-use crate::config::ModelParameters;
+use crate::config;
+use crate::config::{ModelConfig, ModelParameters};
+use crate::llm::PromptModelVendor::OpenAI;
 use crate::llm::{llm, theme, LLMResult};
 use anyhow::{anyhow, Result};
 use colored::Colorize;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
+use std::fmt::format;
 use std::io;
 use std::io::{BufRead, BufReader, Write};
+use std::mem::forget;
 use std::time::Duration;
 
 #[derive(Debug)]
@@ -18,30 +22,94 @@ pub(crate) struct OpenAICompatible {
     pub(crate) client: reqwest::blocking::Client,
 }
 
-pub struct OpenAI {
+pub struct OpenAIClient {
     base_url: String,
     model: String,
-    api_key: String,
-    client: reqwest::Client,
+    api_key: Option<String>,
+    client: reqwest::blocking::Client,
 }
 
-impl OpenAI {
-    pub fn new(base_url: String, model: String, api_key: String) -> OpenAI {
-        OpenAI {
-            base_url,
+impl OpenAIClient {
+    pub fn new_from_config(conf: &ModelConfig, model: Option<String>) -> OpenAIClient {
+        let model = model.unwrap_or(conf.model.clone());
+        OpenAIClient {
+            base_url: conf.base_url.clone(),
             model,
-            api_key,
-            client: reqwest::Client::new(),
+            api_key: conf.api_key.clone(),
+            client: reqwest::blocking::Client::new(),
         }
     }
 
-    pub fn new_with_client(client: reqwest::Client, base_url: String, model: String, api_key: String) -> OpenAI {
-        OpenAI {
+    pub fn new(base_url: String, model: String, api_key: String) -> OpenAIClient {
+        OpenAIClient {
             base_url,
             model,
-            api_key,
+            api_key: Some(api_key),
+            client: reqwest::blocking::Client::new(),
+        }
+    }
+
+    pub fn new_with_client(
+        client: reqwest::blocking::Client,
+        base_url: String,
+        model: String,
+        api_key: String,
+    ) -> OpenAIClient {
+        OpenAIClient {
+            base_url,
+            model,
+            api_key: Some(api_key),
             client,
         }
+    }
+
+    pub fn chat(
+        &self,
+        model: &String,
+        messages: Vec<llm::Message>,
+        option: ModelParameters,
+    ) -> Result<impl Iterator<Item = String>> {
+        let payload = &json!({
+            "model": model,
+            "messages": messages,
+            "options": {
+                "temperature": option.temperature,
+                "top_p": option.top_p,
+                "top_k": option.top_k,
+            },
+            "options": option,
+            "keep_alive": "30m",
+            "max_tokens": option.max_tokens,
+            "stream": true,
+        });
+
+        let mut builder = self.client.post(format!("{}/chat/completions", self.base_url));
+        if let Some(key) = &self.api_key {
+            builder = builder.header("Authorization", format!("Bearer {}", key));
+        }
+        let response = builder
+            .header("Accept", "text/event-stream")
+            .header("Content-Type", "application/json")
+            .json(payload)
+            .send()?;
+
+        if !response.status().is_success() {
+            return Err(anyhow!("HTTP request failed with status code {}", response.status()));
+        }
+
+        let reader = BufReader::new(response);
+        Ok(reader
+            .lines()
+            .filter_map(|l| {
+                l.ok().and_then(|s| {
+                    if s.starts_with("data: ") {
+                        Some(s["data: ".len()..].to_string())
+                    } else {
+                        None
+                    }
+                })
+            })
+            .filter(|s| s != "[DONE]"))
     }
 }
 
@@ -109,71 +177,24 @@ struct Message {
 }
 
 impl OpenAICompatible {
-    pub fn chat(&self, payload: &Value) -> Result<impl Iterator<Item = String>> {
-        let response = self
-            .client
-            .post(&self.url)
-            .header("Accept", "text/event-stream")
-            .header("Content-Type", "application/json")
-            .header("Authorization", format!("Bearer {}", self.api_key))
-            .json(payload)
-            .send()?;
-
-        if !response.status().is_success() {
-            return Err(anyhow!("HTTP request failed with status code {}", response.status()));
-        }
-
-        let reader = BufReader::new(response);
-        Ok(reader
-            .lines()
-            .filter_map(|l| {
-                l.ok().and_then(|s| {
-                    if s.starts_with("data: ") {
-                        Some(s["data: ".len()..].to_string())
-                    } else {
-                        None
-                    }
-                })
-            })
-            .filter(|s| s != "[DONE]"))
-    }
-
     pub(crate) fn request(
         &self,
         diff_content: &str,
+        model_config: &ModelConfig,
         option: ModelParameters,
         hint: Option<String>,
     ) -> Result<LLMResult, anyhow::Error> {
         OpenAICompatible::print_configuration(&self.model, diff_content, &option, &self.url);
+        let client = OpenAIClient::new_from_config(model_config, None);
 
-        let mut messages = Vec::new();
-        messages.push(llm::Message::new_system(self.prompt.clone()));
-        messages.push(llm::Message::new_user(format!("Generate commit message for these changes. If it's a new file, focus on its purpose rather than analyzing its content:\n```diff\n{diff_content}\n```")));
-        if let Some(p) = hint {
-            messages.push(llm::Message::new_user(format!("hint: {p}")));
-        }
+        let messages = self.git_commit_prompt(diff_content, hint);
+        let mut output = String::new();
 
-        let payload = &json!({
-            "model": &self.model,
-            "messages": messages,
-            "options": {
-                "temperature": option.temperature,
-                "top_p": option.top_p,
-                "top_k": option.top_k,
-            },
-            "options": option,
-            "keep_alive": "30m",
-            "max_tokens": option.max_tokens,
-            "stream": true,
-        });
-
-        let mut message = String::new();
+        let mut usage = OpenAIResponseUsage::default();
 
         let (start_separator, end_separator) = theme::get_stream_separator(3); // 使用方案2，可以改为1或3尝试其他效果
-        let mut usage = OpenAIResponseUsage::default();
         println!("{}", start_separator);
-
-        for line in self.chat(payload)? {
+        for line in client.chat(&self.model, messages, option)? {
             if line.is_empty() {
                 continue;
             }
@@ -181,7 +202,7 @@ impl OpenAICompatible {
             for choice in data.choices {
                 print!("{}", choice.delta.content.cyan());
                 io::stdout().flush()?; // 强制刷新到终端，确保每次打印都显示
-                message.push_str(choice.delta.content.as_str());
+                output.push_str(choice.delta.content.as_str());
             }
             if let Some(u) = data.usage {
                 usage.total_tokens += u.total_tokens;
@@ -189,20 +210,12 @@ impl OpenAICompatible {
                 usage.completion_tokens += u.completion_tokens;
             }
         }
-
         println!("\n{}", end_separator);
-
-        // println!(
-        //     "\n{} {} {}",
-        //     "⚙️".bright_cyan(),
-        //     "LLM Response: \n".bright_cyan().bold(),
-        //     message.bright_cyan(),
-        // );
 
         let re = Regex::new(r"(?s)<think>.*?</think>")
             .map_err(|e| format!("invalid regex, err: {e}"))
             .unwrap();
-        let message = re.replace_all(&message.trim(), "").trim().to_string();
+        let message = re.replace_all(&output.trim(), "").trim().to_string();
         let messages = process_llm_response(message.clone())?;
 
         Ok(LLMResult {
@@ -212,6 +225,16 @@ impl OpenAICompatible {
             commit_message: message,
             commit_messages: messages,
         })
+    }
+
+    fn git_commit_prompt(&self, diff_content: &str, hint: Option<String>) -> Vec<llm::Message> {
+        let mut messages = Vec::new();
+        messages.push(llm::Message::new_system(self.prompt.clone()));
+        messages.push(llm::Message::new_user(format!("Generate commit message for these changes. If it's a new file, focus on its purpose rather than analyzing its content:\n```diff\n{diff_content}\n```")));
+        if let Some(p) = hint {
+            messages.push(llm::Message::new_user(format!("hint: {p}")));
+        }
+        messages
     }
 
     fn print_configuration(model: &String, diff_content: &str, option: &ModelParameters, url: &String) {
