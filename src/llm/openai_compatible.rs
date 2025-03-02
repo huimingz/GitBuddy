@@ -1,25 +1,18 @@
-use crate::config;
 use crate::config::{ModelConfig, ModelParameters};
-use crate::llm::PromptModelVendor::OpenAI;
 use crate::llm::{llm, theme, LLMResult};
 use anyhow::{anyhow, Error, Result};
 use colored::Colorize;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
-use serde_json::{json, Value};
-use std::fmt::format;
+use serde_json::json;
 use std::io;
 use std::io::{BufRead, BufReader, Write};
-use std::mem::forget;
-use std::time::Duration;
 
 #[derive(Debug)]
 pub(crate) struct OpenAICompatible {
     pub(crate) url: String,
     pub(crate) model: String,
     pub(crate) prompt: String,
-    pub(crate) api_key: String,
-    pub(crate) client: reqwest::blocking::Client,
 }
 
 pub struct OpenAIClient {
@@ -63,11 +56,7 @@ impl OpenAIClient {
         }
     }
 
-    pub fn chat(
-        &self,
-        messages: Vec<llm::Message>,
-        option: ModelParameters,
-    ) -> Result<impl Iterator<Item = String>> {
+    pub fn chat(&self, messages: Vec<llm::Message>, option: ModelParameters) -> Result<impl Iterator<Item = String>> {
         let payload = &json!({
             "model": self.model,
             "messages": messages,
@@ -205,7 +194,12 @@ impl OpenAICompatible {
         })
     }
 
-    fn stream_chat_response(&self, option: ModelParameters, client: OpenAIClient, messages: Vec<llm::Message>) -> Result<(String, OpenAIResponseUsage), Error> {
+    fn stream_chat_response(
+        &self,
+        option: ModelParameters,
+        client: OpenAIClient,
+        messages: Vec<llm::Message>,
+    ) -> Result<(String, OpenAIResponseUsage), Error> {
         let mut output = String::new();
         let mut usage = OpenAIResponseUsage::default();
 
