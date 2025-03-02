@@ -2,7 +2,7 @@ use crate::config;
 use crate::config::{ModelConfig, ModelParameters};
 use crate::llm::PromptModelVendor::OpenAI;
 use crate::llm::{llm, theme, LLMResult};
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, Error, Result};
 use colored::Colorize;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
