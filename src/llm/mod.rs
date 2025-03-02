@@ -6,6 +6,7 @@ mod ollama;
 mod openai_compatible;
 mod openai_compatible_builder;
 mod theme;
+mod openai;
 
 use crate::config;
 use crate::config::{ModelConfig, ModelParameters};
