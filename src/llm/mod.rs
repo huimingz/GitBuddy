@@ -63,32 +63,23 @@ pub fn llm_request(diff_content: &str, prompt: Prompt, args: &CommandArgs) -> Re
     if let Some(m) = args.model.as_ref() {
         mc.model = m.clone()
     }
-    get_commit_message(
-        diff_content,
-        prompt,
-        args.hint.as_ref(),
-        &mc,
-        config.model_params(),
-        args.number_of_commit_options,
-    )
+    get_commit_message(diff_content, &mc, config.model_params(), args)
 }
 
 fn get_commit_message(
     diff_content: &str,
-    prompt: Prompt,
-    hint: Option<&String>,
     model_config: &ModelConfig,
     model_option: ModelParameters,
-    number_of_commit_options: u8,
+    args: &CommandArgs,
 ) -> Result<LLMResult> {
     let builder = OpenAICompatibleBuilder::new(model_config);
 
     // generate http request
 
-    let rendered_prompt = render_prompt(prompt, number_of_commit_options)?;
+    let rendered_prompt = render_prompt(args.prompt, args.number_of_commit_options)?;
     let m = builder.build(rendered_prompt);
     let result = m
-        .request(diff_content, model_config, model_option, hint)
+        .request(diff_content, model_config, model_option, args)
         .map_err(|e| anyhow!("request failed: {:?}", e))?;
     Ok(result)
 }

@@ -32,6 +32,9 @@ struct Cli {
 
     #[arg(short = 'n', long = "number", default_value_t = 3)]
     number_of_commit_options: u8,
+
+    #[arg(short = 'r', long = "ref")]
+    reference: Option<String>,
 }
 
 #[derive(Subcommand)]
@@ -74,6 +77,7 @@ fn main() {
                 cli.prompt,
                 cli.hint.clone(),
                 cli.number_of_commit_options,
+                cli.reference.clone(),
             );
             ai::handler(cli.prompt, cmd_args).unwrap();
         }
@@ -95,6 +99,7 @@ fn main() {
                 cli.prompt,
                 cli.hint.clone(),
                 cli.number_of_commit_options,
+                cli.reference.clone(),
             );
             ai::handler(cli.prompt, cmd_args).unwrap()
         }

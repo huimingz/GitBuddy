@@ -8,6 +8,7 @@ pub struct CommandArgs {
     pub prompt: Prompt,
     pub hint: Option<String>,
     pub number_of_commit_options: u8,
+    pub reference: Option<String>,
 }
 
 impl CommandArgs {
@@ -19,6 +20,7 @@ impl CommandArgs {
         prompt: Prompt,
         hint: Option<String>,
         number_of_commit_options: u8,
+        reference: Option<String>,
     ) -> Self {
         Self {
             push,
@@ -28,6 +30,7 @@ impl CommandArgs {
             prompt,
             hint,
             number_of_commit_options,
+            reference,
         }
     }
-} 
+}

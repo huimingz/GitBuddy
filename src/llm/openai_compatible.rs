@@ -1,3 +1,4 @@
+use crate::args::CommandArgs;
 use crate::config::{ModelConfig, ModelParameters};
 use crate::llm::openai::{OpenAIClient, OpenAIResponseUsage, OpenAIStreamResponse};
 use crate::llm::{llm, theme, LLMResult};
@@ -20,12 +21,12 @@ impl OpenAICompatible {
         diff_content: &str,
         model_config: &ModelConfig,
         option: ModelParameters,
-        hint: Option<&String>,
+        args: &CommandArgs,
     ) -> Result<LLMResult, anyhow::Error> {
         let client = OpenAIClient::new_from_config(model_config, None);
         OpenAICompatible::print_configuration(&self.model, diff_content, &option, &client.base_url);
 
-        let messages = self.git_commit_prompt(diff_content, hint);
+        let messages = self.git_commit_prompt(diff_content, args.hint.as_ref());
 
         let (output, usage) = self.stream_chat_response(option, client, messages)?;
 
@@ -33,7 +34,7 @@ impl OpenAICompatible {
             .map_err(|e| format!("invalid regex, err: {e}"))
             .unwrap();
         let message = re.replace_all(&output.trim(), "").trim().to_string();
-        let messages = process_llm_response(message.clone())?;
+        let messages = process_llm_response(message.clone(), args.reference.as_ref())?;
 
         Ok(LLMResult {
             completion_tokens: usage.completion_tokens,
@@ -170,7 +171,7 @@ fn extract_json_content(text: &str) -> String {
     text.to_string()
 }
 
-fn process_llm_response(response: String) -> Result<Vec<String>> {
+fn process_llm_response(response: String, reference: Option<&String>) -> Result<Vec<String>> {
     // 首先尝试提取代码块内容
     let content = extract_json_content(&response);
 
@@ -188,6 +189,11 @@ fn process_llm_response(response: String) -> Result<Vec<String>> {
                     commit.push_str(&format!("{}({}): {}", msg.r#type, scope.trim(), msg.subject.trim()));
                 } else {
                     commit.push_str(&format!("{}: {}", msg.r#type, msg.subject.trim()));
+                }
+
+                // 添加 issue 引用
+                if let Some(r) = reference {
+                    commit.push_str(r.as_str())
                 }
 
                 // 添加可选的消息体
@@ -208,16 +214,6 @@ fn process_llm_response(response: String) -> Result<Vec<String>> {
         Err(e) => {
             println!("Parse JSON failed: {}", e);
             Err(anyhow::anyhow!("Parse JSON failed: {}", e))
-            //  // 如果 JSON 解析失败，回退到原始的分隔符处理方式
-            //  response
-            //  .replace("---", "===")
-            //  .replace("___", "===")
-            //  .replace("***", "===")
-            //  .replace("```", "")
-            //  .split("===")
-            //  .map(|s| s.trim().to_string())
-            //  .filter(|s| !s.is_empty())
-            //  .collect()
         }
     }
 }
