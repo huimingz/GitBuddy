@@ -1,9 +1,9 @@
-use serde_json::json;
-use anyhow::anyhow;
-use std::io::{BufRead, BufReader};
-use serde::{Deserialize, Serialize};
 use crate::config::{ModelConfig, ModelParameters};
 use crate::llm::llm;
+use anyhow::anyhow;
+use serde::{Deserialize, Serialize};
+use serde_json::json;
+use std::io::{BufRead, BufReader};
 
 pub struct OpenAIClient {
     pub(crate) base_url: String,
@@ -46,7 +46,11 @@ impl OpenAIClient {
         }
     }
 
-    pub fn chat(&self, messages: Vec<llm::Message>, option: ModelParameters) -> anyhow::Result<impl Iterator<Item = String>> {
+    pub fn stream_chat(
+        &self,
+        messages: Vec<llm::Message>,
+        option: ModelParameters,
+    ) -> anyhow::Result<impl Iterator<Item = (OpenAIStreamResponse, String)>> {
         let payload = &json!({
             "model": self.model,
             "messages": messages,
@@ -87,7 +91,11 @@ impl OpenAIClient {
                     }
                 })
             })
-            .filter(|s| s != "[DONE]"))
+            .filter(|s| s != "[DONE]")
+            .map(|s| {
+                let json: OpenAIStreamResponse = serde_json::from_str(&s).unwrap();
+                (json, s)
+            }))
     }
 }
 

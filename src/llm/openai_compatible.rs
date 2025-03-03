@@ -1,6 +1,6 @@
 use crate::args::CommandArgs;
 use crate::config::{ModelConfig, ModelParameters};
-use crate::llm::openai::{OpenAIClient, OpenAIResponseUsage, OpenAIStreamResponse};
+use crate::llm::openai::{OpenAIClient, OpenAIResponseUsage};
 use crate::llm::{llm, theme, LLMResult};
 use anyhow::{Error, Result};
 use colored::Colorize;
@@ -56,11 +56,7 @@ impl OpenAICompatible {
 
         let (start_separator, end_separator) = theme::get_stream_separator(3); // 使用方案2，可以改为1或3尝试其他效果
         println!("{}", start_separator);
-        for line in client.chat(messages, option)? {
-            if line.is_empty() {
-                continue;
-            }
-            let data: OpenAIStreamResponse = serde_json::from_str(&line)?;
+        for (data, _line) in client.stream_chat(messages, option)? {
             for choice in data.choices {
                 print!("{}", choice.delta.content.cyan());
                 io::stdout().flush()?; // flush to terminal, ensure each print is visible
