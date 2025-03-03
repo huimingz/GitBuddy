@@ -10,9 +10,7 @@ use std::io;
 use std::io::{BufRead, Write};
 
 #[derive(Debug)]
-pub(crate) struct OpenAICompatible {
-    pub(crate) prompt: String,
-}
+pub(crate) struct OpenAICompatible {}
 
 impl OpenAICompatible {
     pub(crate) fn request(
@@ -21,11 +19,12 @@ impl OpenAICompatible {
         model_config: &ModelConfig,
         option: ModelParameters,
         args: &CommandArgs,
+        prompt: String,
     ) -> Result<LLMResult, anyhow::Error> {
         let client = OpenAIClient::new_from_config(model_config, None);
         OpenAICompatible::print_configuration(&model_config.model, diff_content, &option, &client.base_url);
 
-        let messages = self.git_commit_prompt(diff_content, args.hint.as_ref());
+        let messages = self.git_commit_prompt(diff_content, args.hint.as_ref(), prompt);
 
         let (output, usage) = self.stream_chat_response(option, client, messages)?;
 
@@ -71,9 +70,9 @@ impl OpenAICompatible {
         Ok((output, usage))
     }
 
-    fn git_commit_prompt(&self, diff_content: &str, hint: Option<&String>) -> Vec<llm::Message> {
+    fn git_commit_prompt(&self, diff_content: &str, hint: Option<&String>, prompt: String) -> Vec<llm::Message> {
         let mut messages = Vec::new();
-        messages.push(llm::Message::new_system(self.prompt.clone()));
+        messages.push(llm::Message::new_system(prompt));
         messages.push(llm::Message::new_user(format!("Generate commit message for these changes. If it's a new file, focus on its purpose rather than analyzing its content:\n```diff\n{diff_content}\n```")));
         if let Some(p) = hint {
             messages.push(llm::Message::new_user(format!("hint: {p}")));

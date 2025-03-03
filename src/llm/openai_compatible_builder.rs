@@ -3,18 +3,16 @@ use crate::llm::openai_compatible::OpenAICompatible;
 
 pub(crate) struct OpenAICompatibleBuilder {
     url: String,
-    model: String,
 }
 
 impl OpenAICompatibleBuilder {
     pub fn new(model_config: &ModelConfig) -> Self {
         OpenAICompatibleBuilder {
             url: model_config.base_url.clone(),
-            model: model_config.model.clone(),
         }
     }
 
-    pub fn build(self, prompt: String) -> OpenAICompatible {
-        OpenAICompatible { prompt: prompt }
+    pub fn build(self) -> OpenAICompatible {
+        OpenAICompatible {}
     }
 }

@@ -77,9 +77,9 @@ fn get_commit_message(
     // generate http request
 
     let rendered_prompt = render_prompt(args.prompt, args.number_of_commit_options)?;
-    let m = builder.build(rendered_prompt);
+    let m = builder.build();
     let result = m
-        .request(diff_content, model_config, model_option, args)
+        .request(diff_content, model_config, model_option, args, rendered_prompt)
         .map_err(|e| anyhow!("request failed: {:?}", e))?;
     Ok(result)
 }
