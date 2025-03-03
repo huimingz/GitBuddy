@@ -187,7 +187,8 @@ fn process_llm_response(response: String, reference: Option<&String>) -> Result<
 
                 // 添加 issue 引用
                 if let Some(r) = reference {
-                    commit.push_str(r.as_str())
+                    commit.push_str(" ");
+                    commit.push_str(r.as_str());
                 }
 
                 // 添加可选的消息体
