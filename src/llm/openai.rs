@@ -5,6 +5,14 @@ use serde::{Deserialize, Serialize};
 use serde_json::json;
 use std::io::{BufRead, BufReader};
 
+pub trait Client {
+    fn stream_chat(
+        &self,
+        messages: Vec<llm::Message>,
+        option: ModelParameters,
+    ) -> Result<impl Iterator<Item = (OpenAIStreamResponse, String)>, anyhow::Error>;
+}
+
 pub struct OpenAIClient {
     pub(crate) base_url: String,
     model: String,
@@ -50,7 +58,7 @@ impl OpenAIClient {
         &self,
         messages: Vec<llm::Message>,
         option: ModelParameters,
-    ) -> anyhow::Result<impl Iterator<Item = (OpenAIStreamResponse, String)>> {
+    ) -> anyhow::Result<impl Iterator<Item = (OpenAIStreamResponse, String)>, anyhow::Error> {
         let payload = &json!({
             "model": self.model,
             "messages": messages,
