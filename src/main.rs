@@ -15,24 +15,32 @@ mod prompt;
     long_about = "An AI-driven tool designed to simplify your Git commit process."
 )]
 struct Cli {
+    /// plan to deprecate.
     #[command(subcommand)]
     command: Option<Commands>,
 
+    /// model vendor, default is the vendor specified in the configuration file
     #[arg(short = 'v', long)]
     vendor: Option<String>,
 
+    /// model name, default is the vendor's default model, eg. mistral
     #[arg(short = 'm', long)]
     model: Option<String>,
 
+    /// prompt template, default is p1.
+    /// plan to deprecate this, do not use it.
     #[arg(long, default_value_t=Prompt::P1)]
     prompt: Prompt,
 
+    /// provide a hint for the AI to generate a better commit message, eg. "type: fix, scope: core"
     #[arg(long = "hint")]
     hint: Option<String>,
 
+    /// number of commit options, default is 3
     #[arg(short = 'n', long = "number", default_value_t = 3)]
     number_of_commit_options: u8,
 
+    /// the issue number or PR number, eg. #123
     #[arg(short = 'r', long = "ref")]
     reference: Option<String>,
 }
