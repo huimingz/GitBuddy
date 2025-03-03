@@ -3,11 +3,12 @@ mod deepseek;
 mod interaction;
 mod llm;
 mod ollama;
+mod openai;
 mod openai_compatible;
 mod openai_compatible_builder;
 mod theme;
-mod openai;
 
+use crate::args::CommandArgs;
 use crate::config;
 use crate::config::{ModelConfig, ModelParameters};
 use crate::prompt::Prompt;
@@ -52,37 +53,30 @@ pub struct LLMResult {
     pub total_tokens: i64,
 }
 
-pub fn llm_request(
-    diff_content: &str,
-    vendor: Option<String>,
-    model: Option<String>,
-    prompt: Prompt,
-    hint: Option<String>,
-    number_of_commit_options: u8,
-) -> Result<LLMResult> {
+pub fn llm_request(diff_content: &str, prompt: Prompt, args: &CommandArgs) -> Result<LLMResult> {
     let config = config::get_config()?;
     let model_config = config
-        .load_model(vendor)
+        .load_model(args.vendor.clone())
         .expect("must load model config and prompt template");
 
     let mut mc = model_config.clone();
-    if let Some(m) = model {
-        mc.model = m
+    if let Some(m) = args.model.as_ref() {
+        mc.model = m.clone()
     }
     get_commit_message(
         diff_content,
         prompt,
-        hint,
+        args.hint.as_ref(),
         &mc,
         config.model_params(),
-        number_of_commit_options,
+        args.number_of_commit_options,
     )
 }
 
 fn get_commit_message(
     diff_content: &str,
     prompt: Prompt,
-    hint: Option<String>,
+    hint: Option<&String>,
     model_config: &ModelConfig,
     model_option: ModelParameters,
     number_of_commit_options: u8,

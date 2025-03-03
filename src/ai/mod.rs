@@ -2,9 +2,9 @@ use colored::Colorize;
 use std::time::Instant;
 
 use crate::ai::git::{git_stage_diff, git_stage_filenames};
-use crate::llm;
 use crate::llm::Confirm;
 use crate::prompt::Prompt;
+use crate::{args, llm};
 
 mod git;
 mod theme;
@@ -39,15 +39,7 @@ fn format_stat(label: &str, value: i64, emoji: &str) -> Option<String> {
     ))
 }
 
-pub fn handler(
-    push: bool,
-    dry_run: bool,
-    vendor: Option<String>,
-    model: Option<String>,
-    prompt: Prompt,
-    hint: Option<String>,
-    number_of_commit_count: u8,
-) -> Result<(), Box<dyn std::error::Error>> {
+pub fn handler(prompt: Prompt, args: args::CommandArgs) -> Result<(), Box<dyn std::error::Error>> {
     if !is_git_directory() {
         println!("Not git directory");
         return Ok(());
@@ -69,7 +61,7 @@ pub fn handler(
 
     println!("{}", get_command_message());
     let start = Instant::now();
-    let llm_result = llm::llm_request(&diff_content, vendor, model, prompt, hint, number_of_commit_count)?;
+    let llm_result = llm::llm_request(&diff_content, prompt, &args)?;
     theme::print_stats(&llm_result, start.elapsed());
 
     let confirm = llm::confirm_commit(&llm_result)?;
@@ -81,7 +73,7 @@ pub fn handler(
         Confirm::Ok(msg) => Some(msg),
     };
 
-    let result = git::git_commit(commit_message.unwrap(), dry_run);
+    let result = git::git_commit(commit_message.unwrap(), args.dry_run);
     match result {
         Ok(_) => {}
         Err(e) => {
@@ -90,8 +82,8 @@ pub fn handler(
     }
 
     // push
-    if push {
-        match git::git_push(dry_run) {
+    if args.push {
+        match git::git_push(args.dry_run) {
             Ok(_) => {
                 println!("{}", "Push success!!!".green())
             }

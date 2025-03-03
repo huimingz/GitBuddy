@@ -20,7 +20,7 @@ impl OpenAICompatible {
         diff_content: &str,
         model_config: &ModelConfig,
         option: ModelParameters,
-        hint: Option<String>,
+        hint: Option<&String>,
     ) -> Result<LLMResult, anyhow::Error> {
         let client = OpenAIClient::new_from_config(model_config, None);
         OpenAICompatible::print_configuration(&self.model, diff_content, &option, &client.base_url);
@@ -75,7 +75,7 @@ impl OpenAICompatible {
         Ok((output, usage))
     }
 
-    fn git_commit_prompt(&self, diff_content: &str, hint: Option<String>) -> Vec<llm::Message> {
+    fn git_commit_prompt(&self, diff_content: &str, hint: Option<&String>) -> Vec<llm::Message> {
         let mut messages = Vec::new();
         messages.push(llm::Message::new_system(self.prompt.clone()));
         messages.push(llm::Message::new_user(format!("Generate commit message for these changes. If it's a new file, focus on its purpose rather than analyzing its content:\n```diff\n{diff_content}\n```")));

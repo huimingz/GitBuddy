@@ -2,6 +2,7 @@ use clap::{Parser, Subcommand};
 use prompt::Prompt;
 
 mod ai;
+mod args;
 mod config;
 mod llm;
 mod prompt;
@@ -65,16 +66,16 @@ fn main() {
             dry_run,
             // vendor,
         }) => {
-            ai::handler(
+            let cmd_args = args::CommandArgs::new(
                 *push,
                 *dry_run,
-                cli.vendor,
-                cli.model,
+                cli.vendor.clone(),
+                cli.model.clone(),
                 cli.prompt,
-                cli.hint,
+                cli.hint.clone(),
                 cli.number_of_commit_options,
-            )
-            .unwrap();
+            );
+            ai::handler(cli.prompt, cmd_args).unwrap();
         }
         Some(Commands::Config { vendor, api_key, model }) => {
             let model = if let Some(model) = model {
@@ -85,15 +86,17 @@ fn main() {
 
             config::handler(vendor, api_key, model).unwrap();
         }
-        None => ai::handler(
-            false,
-            false,
-            cli.vendor,
-            cli.model,
-            cli.prompt,
-            cli.hint,
-            cli.number_of_commit_options,
-        )
-        .unwrap(),
+        None => {
+            let cmd_args = args::CommandArgs::new(
+                false,
+                false,
+                cli.vendor.clone(),
+                cli.model.clone(),
+                cli.prompt,
+                cli.hint.clone(),
+                cli.number_of_commit_options,
+            );
+            ai::handler(cli.prompt, cmd_args).unwrap()
+        }
     }
 }
