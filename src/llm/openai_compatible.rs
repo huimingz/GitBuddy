@@ -11,7 +11,6 @@ use std::io::{BufRead, Write};
 
 #[derive(Debug)]
 pub(crate) struct OpenAICompatible {
-    pub(crate) model: String,
     pub(crate) prompt: String,
 }
 
@@ -24,7 +23,7 @@ impl OpenAICompatible {
         args: &CommandArgs,
     ) -> Result<LLMResult, anyhow::Error> {
         let client = OpenAIClient::new_from_config(model_config, None);
-        OpenAICompatible::print_configuration(&self.model, diff_content, &option, &client.base_url);
+        OpenAICompatible::print_configuration(&model_config.model, diff_content, &option, &client.base_url);
 
         let messages = self.git_commit_prompt(diff_content, args.hint.as_ref());
 
