@@ -9,112 +9,106 @@ use serde::{Deserialize, Serialize};
 use std::io;
 use std::io::{BufRead, Write};
 
-#[derive(Debug)]
-pub(crate) struct OpenAICompatible {}
+pub(crate) fn generate_git_commit_messages(
+    diff_content: &str,
+    model_config: &ModelConfig,
+    option: ModelParameters,
+    args: &CommandArgs,
+    prompt: String,
+) -> Result<LLMResult, anyhow::Error> {
+    let client = OpenAIClient::new_from_config(model_config, None);
+    print_configuration(&model_config.model, diff_content, &option, &client.base_url);
 
-impl OpenAICompatible {
-    pub(crate) fn request(
-        diff_content: &str,
-        model_config: &ModelConfig,
-        option: ModelParameters,
-        args: &CommandArgs,
-        prompt: String,
-    ) -> Result<LLMResult, anyhow::Error> {
-        let client = OpenAIClient::new_from_config(model_config, None);
-        OpenAICompatible::print_configuration(&model_config.model, diff_content, &option, &client.base_url);
+    let messages = git_commit_prompt(diff_content, args.hint.as_ref(), prompt);
 
-        let messages = OpenAICompatible::git_commit_prompt(diff_content, args.hint.as_ref(), prompt);
+    let (output, usage) = stream_chat_response(option, client, messages)?;
 
-        let (output, usage) = OpenAICompatible::stream_chat_response(option, client, messages)?;
+    let re = Regex::new(r"(?s)<think>.*?</think>")
+        .map_err(|e| format!("invalid regex, err: {e}"))
+        .unwrap();
+    let message = re.replace_all(&output.trim(), "").trim().to_string();
+    let messages = process_llm_response(message.clone(), args.reference.as_ref())?;
 
-        let re = Regex::new(r"(?s)<think>.*?</think>")
-            .map_err(|e| format!("invalid regex, err: {e}"))
-            .unwrap();
-        let message = re.replace_all(&output.trim(), "").trim().to_string();
-        let messages = process_llm_response(message.clone(), args.reference.as_ref())?;
-
-        Ok(LLMResult {
-            completion_tokens: usage.completion_tokens,
-            prompt_tokens: usage.prompt_tokens,
-            total_tokens: usage.total_tokens,
-            commit_message: message,
-            commit_messages: messages,
-        })
-    }
-
-    fn stream_chat_response(
-        option: ModelParameters,
-        client: OpenAIClient,
-        messages: Vec<llm::Message>,
-    ) -> Result<(String, OpenAIResponseUsage), Error> {
-        let mut output = String::new();
-        let mut usage = OpenAIResponseUsage::default();
-
-        let (start_separator, end_separator) = theme::get_stream_separator(3); // 使用方案2，可以改为1或3尝试其他效果
-        println!("{}", start_separator);
-        for (data, _line) in client.stream_chat(messages, option)? {
-            for choice in data.choices {
-                print!("{}", choice.delta.content.cyan());
-                io::stdout().flush()?; // flush to terminal, ensure each print is visible
-                output.push_str(choice.delta.content.as_str());
-            }
-            if let Some(u) = data.usage {
-                usage.total_tokens += u.total_tokens;
-                usage.prompt_tokens += u.prompt_tokens;
-                usage.completion_tokens += u.completion_tokens;
-            }
-        }
-        println!("\n{}", end_separator);
-        Ok((output, usage))
-    }
-
-    fn git_commit_prompt(diff_content: &str, hint: Option<&String>, prompt: String) -> Vec<llm::Message> {
-        let mut messages = Vec::new();
-        messages.push(llm::Message::new_system(prompt));
-        messages.push(llm::Message::new_user(format!("Generate commit message for these changes. If it's a new file, focus on its purpose rather than analyzing its content:\n```diff\n{diff_content}\n```")));
-        if let Some(p) = hint {
-            messages.push(llm::Message::new_user(format!("hint: {p}")));
-        }
-        messages
-    }
-
-    fn print_configuration(model: &String, diff_content: &str, option: &ModelParameters, url: &String) {
-        println!(
-            "\n{} {} {}",
-            "⚙️".bright_cyan(),
-            "LLM Configuration".bright_cyan().bold(),
-            "🔮".bright_cyan()
-        );
-        println!("  {} Model: {}", "🚀".bright_yellow(), model.bright_green().bold());
-        println!(
-            "  {} Max Tokens: {}",
-            "⚡".bright_yellow(),
-            option.max_tokens.to_string().bright_green().bold()
-        );
-        println!(
-            "  {} Temperature: {}",
-            "🎲".bright_yellow(),
-            option.temperature.to_string().bright_green().bold()
-        );
-        println!(
-            "  {} Top P: {}",
-            "🎯".bright_yellow(),
-            option.top_p.to_string().bright_green().bold()
-        );
-        println!(
-            "  {} Diff Length: {} chars",
-            "📏".bright_yellow(),
-            diff_content.len().to_string().bright_green().bold()
-        );
-        println!(
-            "  {} Diff Lines: {} lines",
-            "📑".bright_yellow(),
-            diff_content.lines().count().to_string().bright_green().bold()
-        );
-        println!("  {} Endpoint: {}\n", "🌐".bright_yellow(), url.bright_green());
-    }
+    Ok(LLMResult {
+        completion_tokens: usage.completion_tokens,
+        prompt_tokens: usage.prompt_tokens,
+        total_tokens: usage.total_tokens,
+        commit_message: message,
+        commit_messages: messages,
+    })
 }
 
+fn stream_chat_response(
+    option: ModelParameters,
+    client: OpenAIClient,
+    messages: Vec<llm::Message>,
+) -> Result<(String, OpenAIResponseUsage), Error> {
+    let mut output = String::new();
+    let mut usage = OpenAIResponseUsage::default();
+
+    let (start_separator, end_separator) = theme::get_stream_separator(3); // 使用方案2，可以改为1或3尝试其他效果
+    println!("{}", start_separator);
+    for (data, _line) in client.stream_chat(messages, option)? {
+        for choice in data.choices {
+            print!("{}", choice.delta.content.cyan());
+            io::stdout().flush()?; // flush to terminal, ensure each print is visible
+            output.push_str(choice.delta.content.as_str());
+        }
+        if let Some(u) = data.usage {
+            usage.total_tokens += u.total_tokens;
+            usage.prompt_tokens += u.prompt_tokens;
+            usage.completion_tokens += u.completion_tokens;
+        }
+    }
+    println!("\n{}", end_separator);
+    Ok((output, usage))
+}
+
+fn git_commit_prompt(diff_content: &str, hint: Option<&String>, prompt: String) -> Vec<llm::Message> {
+    let mut messages = Vec::new();
+    messages.push(llm::Message::new_system(prompt));
+    messages.push(llm::Message::new_user(format!("Generate commit message for these changes. If it's a new file, focus on its purpose rather than analyzing its content:\n```diff\n{diff_content}\n```")));
+    if let Some(p) = hint {
+        messages.push(llm::Message::new_user(format!("hint: {p}")));
+    }
+    messages
+}
+
+fn print_configuration(model: &String, diff_content: &str, option: &ModelParameters, url: &String) {
+    println!(
+        "\n{} {} {}",
+        "⚙️".bright_cyan(),
+        "LLM Configuration".bright_cyan().bold(),
+        "🔮".bright_cyan()
+    );
+    println!("  {} Model: {}", "🚀".bright_yellow(), model.bright_green().bold());
+    println!(
+        "  {} Max Tokens: {}",
+        "⚡".bright_yellow(),
+        option.max_tokens.to_string().bright_green().bold()
+    );
+    println!(
+        "  {} Temperature: {}",
+        "🎲".bright_yellow(),
+        option.temperature.to_string().bright_green().bold()
+    );
+    println!(
+        "  {} Top P: {}",
+        "🎯".bright_yellow(),
+        option.top_p.to_string().bright_green().bold()
+    );
+    println!(
+        "  {} Diff Length: {} chars",
+        "📏".bright_yellow(),
+        diff_content.len().to_string().bright_green().bold()
+    );
+    println!(
+        "  {} Diff Lines: {} lines",
+        "📑".bright_yellow(),
+        diff_content.lines().count().to_string().bright_green().bold()
+    );
+    println!("  {} Endpoint: {}\n", "🌐".bright_yellow(), url.bright_green());
+}
 fn fix_json_response(text: &str) -> String {
     // 使用正则表达式匹配 JSON 数组部分
     let re = Regex::new(r"\[\s*\{.*\}\s*\]").unwrap();

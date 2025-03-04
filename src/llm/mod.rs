@@ -10,7 +10,7 @@ mod theme;
 use crate::args::CommandArgs;
 use crate::config;
 use crate::config::{ModelConfig, ModelParameters};
-use crate::llm::openai_compatible::OpenAICompatible;
+use crate::llm::openai_compatible::{generate_git_commit_messages, OpenAICompatible};
 use crate::prompt::Prompt;
 use anyhow::{anyhow, Error, Result};
 use clap::ValueEnum;
@@ -72,7 +72,7 @@ fn get_commit_message(
     args: &CommandArgs,
 ) -> Result<LLMResult> {
     let rendered_prompt = render_prompt(args.prompt, args.number_of_commit_options)?;
-    let result = OpenAICompatible::request(diff_content, model_config, model_option, args, rendered_prompt)
+    let result = generate_git_commit_messages(diff_content, model_config, model_option, args, rendered_prompt)
         .map_err(|e| anyhow!("request failed: {:?}", e))?;
     Ok(result)
 }
