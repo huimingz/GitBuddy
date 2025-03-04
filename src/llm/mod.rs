@@ -1,16 +1,16 @@
 mod baichuan;
 mod deepseek;
+mod git_commit;
 mod interaction;
 mod llm;
 mod ollama;
 mod openai;
-mod openai_compatible;
 mod theme;
 
 use crate::args::CommandArgs;
 use crate::config;
 use crate::config::{ModelConfig, ModelParameters};
-use crate::llm::openai_compatible::{generate_git_commit_messages, OpenAICompatible};
+use crate::llm::git_commit::generate_git_commit_messages;
 use crate::prompt::Prompt;
 use anyhow::{anyhow, Error, Result};
 use clap::ValueEnum;
