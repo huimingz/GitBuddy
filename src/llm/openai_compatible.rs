@@ -14,7 +14,6 @@ pub(crate) struct OpenAICompatible {}
 
 impl OpenAICompatible {
     pub(crate) fn request(
-        &self,
         diff_content: &str,
         model_config: &ModelConfig,
         option: ModelParameters,
@@ -24,9 +23,9 @@ impl OpenAICompatible {
         let client = OpenAIClient::new_from_config(model_config, None);
         OpenAICompatible::print_configuration(&model_config.model, diff_content, &option, &client.base_url);
 
-        let messages = self.git_commit_prompt(diff_content, args.hint.as_ref(), prompt);
+        let messages = OpenAICompatible::git_commit_prompt(diff_content, args.hint.as_ref(), prompt);
 
-        let (output, usage) = self.stream_chat_response(option, client, messages)?;
+        let (output, usage) = OpenAICompatible::stream_chat_response(option, client, messages)?;
 
         let re = Regex::new(r"(?s)<think>.*?</think>")
             .map_err(|e| format!("invalid regex, err: {e}"))
@@ -44,7 +43,6 @@ impl OpenAICompatible {
     }
 
     fn stream_chat_response(
-        &self,
         option: ModelParameters,
         client: OpenAIClient,
         messages: Vec<llm::Message>,
@@ -70,7 +68,7 @@ impl OpenAICompatible {
         Ok((output, usage))
     }
 
-    fn git_commit_prompt(&self, diff_content: &str, hint: Option<&String>, prompt: String) -> Vec<llm::Message> {
+    fn git_commit_prompt(diff_content: &str, hint: Option<&String>, prompt: String) -> Vec<llm::Message> {
         let mut messages = Vec::new();
         messages.push(llm::Message::new_system(prompt));
         messages.push(llm::Message::new_user(format!("Generate commit message for these changes. If it's a new file, focus on its purpose rather than analyzing its content:\n```diff\n{diff_content}\n```")));

@@ -5,18 +5,17 @@ mod llm;
 mod ollama;
 mod openai;
 mod openai_compatible;
-mod openai_compatible_builder;
 mod theme;
 
 use crate::args::CommandArgs;
 use crate::config;
 use crate::config::{ModelConfig, ModelParameters};
+use crate::llm::openai_compatible::OpenAICompatible;
 use crate::prompt::Prompt;
 use anyhow::{anyhow, Error, Result};
 use clap::ValueEnum;
 use colored::Colorize;
 use minijinja::{context, Environment};
-use openai_compatible_builder::OpenAICompatibleBuilder;
 use serde::{Deserialize, Serialize};
 use std::io::Write;
 
@@ -72,14 +71,8 @@ fn get_commit_message(
     model_option: ModelParameters,
     args: &CommandArgs,
 ) -> Result<LLMResult> {
-    let builder = OpenAICompatibleBuilder::new(model_config);
-
-    // generate http request
-
     let rendered_prompt = render_prompt(args.prompt, args.number_of_commit_options)?;
-    let m = builder.build();
-    let result = m
-        .request(diff_content, model_config, model_option, args, rendered_prompt)
+    let result = OpenAICompatible::request(diff_content, model_config, model_option, args, rendered_prompt)
         .map_err(|e| anyhow!("request failed: {:?}", e))?;
     Ok(result)
 }
