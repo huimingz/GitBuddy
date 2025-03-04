@@ -1,9 +1,6 @@
-mod baichuan;
-mod deepseek;
 mod git_commit;
 mod interaction;
 mod llm;
-mod ollama;
 mod openai;
 mod theme;
 
