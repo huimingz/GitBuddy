@@ -4,6 +4,7 @@ use anyhow::anyhow;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use std::io::{BufRead, BufReader};
+use std::time::Duration;
 
 pub trait Client {
     fn stream_chat(
@@ -73,7 +74,10 @@ impl OpenAIClient {
             "stream": true,
         });
 
-        let mut builder = self.client.post(format!("{}/chat/completions", self.base_url));
+        let mut builder = self
+            .client
+            .post(format!("{}/chat/completions", self.base_url))
+            .timeout(Duration::from_secs(120));
         if let Some(key) = &self.api_key {
             builder = builder.header("Authorization", format!("Bearer {}", key));
         }
