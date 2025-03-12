@@ -88,7 +88,11 @@ impl OpenAIClient {
             .send()?;
 
         if !response.status().is_success() {
-            return Err(anyhow!("HTTP request failed with status code {}", response.status()));
+            return Err(anyhow!(
+                "HTTP request failed with status code {}, reason: {}",
+                response.status(),
+                response.text().unwrap_or("empty".to_string())
+            ));
         }
 
         let reader = BufReader::new(response);
