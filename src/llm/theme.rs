@@ -184,23 +184,18 @@ pub fn get_stream_separator(style: u8) -> (String, String) {
 }
 
 pub fn wrap_text(text: &str, width: usize) -> String {
-    let words: Vec<&str> = text.split_whitespace().collect();
     let mut lines = Vec::new();
-    let mut current_line = String::new();
-
-    for word in words {
-        if current_line.is_empty() {
-            current_line = word.to_string();
-        } else if current_line.len() + word.len() + 1 <= width {
-            current_line.push(' ');
-            current_line.push_str(word);
-        } else {
-            lines.push(current_line);
-            current_line = word.to_string();
+    for l in text.split("\n").into_iter() {
+        if l.len() <= width {
+            lines.push(l);
+            continue;
         }
-    }
-    if !current_line.is_empty() {
-        lines.push(current_line);
+
+        let mut prev = 0;
+        for i in (width..l.len()).step_by(width) {
+            lines.push(&l[prev..i]);
+            prev = i;
+        }
     }
 
     lines.join("\n")
