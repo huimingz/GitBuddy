@@ -184,37 +184,29 @@ pub fn get_stream_separator(style: u8) -> (String, String) {
 }
 
 pub fn wrap_text(text: &str, width: usize) -> String {
-    let mut lines = Vec::new();
+    let mut lines: Vec<String> = Vec::new();
+    let mut current_line = String::new();
     for l in text.split("\n").into_iter() {
         if l.len() <= width {
-            lines.push(l);
+            lines.push(l.to_string());
             continue;
         }
 
-        let mut tmp_line = String::new();
-        for word in l.split_whitespace().into_iter() {
-            if tmp_line.len() == 0 {
-                tmp_line.push_str(word);
-            } else if tmp_line.len() + word.len() <= width {
-                tmp_line.push_str(" ");
-                tmp_line.push_str(word);
+        let words: Vec<&str> = l.split_whitespace().collect();
+        for word in words {
+            if current_line.is_empty() {
+                current_line = word.to_string();
+            } else if current_line.len() + word.len() + 1 <= width {
+                current_line.push(' ');
+                current_line.push_str(word);
             } else {
-                lines.push(tmp_line.as_str());
-                tmp_line = String::new();
+                lines.push(current_line.clone());
+                current_line = word.to_string();
             }
         }
-        if tmp_line.len() > 0 {
-            lines.push(tmp_line.as_str());
+        if current_line.len() > 0 {
+            lines.push(format!("{current_line}"))
         }
-
-        // let mut prev = 0;
-        // for i in (width..l.len()).step_by(width) {
-        //     lines.push(&l[prev..i]);
-        //     prev = i;
-        // }
-        // if prev < l.len() {
-        //     lines.push(&l[prev..]);
-        // }
     }
 
     lines.join("\n")
