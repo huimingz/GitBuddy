@@ -191,11 +191,30 @@ pub fn wrap_text(text: &str, width: usize) -> String {
             continue;
         }
 
-        let mut prev = 0;
-        for i in (width..l.len()).step_by(width) {
-            lines.push(&l[prev..i]);
-            prev = i;
+        let mut tmp_line = String::new();
+        for word in l.split_whitespace().into_iter() {
+            if tmp_line.len() == 0 {
+                tmp_line.push_str(word);
+            } else if tmp_line.len() + word.len() <= width {
+                tmp_line.push_str(" ");
+                tmp_line.push_str(word);
+            } else {
+                lines.push(tmp_line.as_str());
+                tmp_line = String::new();
+            }
         }
+        if tmp_line.len() > 0 {
+            lines.push(tmp_line.as_str());
+        }
+
+        // let mut prev = 0;
+        // for i in (width..l.len()).step_by(width) {
+        //     lines.push(&l[prev..i]);
+        //     prev = i;
+        // }
+        // if prev < l.len() {
+        //     lines.push(&l[prev..]);
+        // }
     }
 
     lines.join("\n")
