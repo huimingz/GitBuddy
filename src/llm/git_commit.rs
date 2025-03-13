@@ -186,13 +186,13 @@ fn process_llm_response(response: String, reference: Option<&String>) -> Result<
                 // 添加可选的消息体
                 if let Some(body) = msg.body.filter(|s| !s.trim().is_empty()) {
                     commit.push_str("\n\n");
-                    commit.push_str(&theme::wrap_text(body.trim(), 80));
+                    commit.push_str(&theme::wrap_text(body.trim(), 120));
                 }
 
                 // 添加可选的页脚
                 if let Some(footer) = msg.footer.filter(|s| !s.trim().is_empty()) {
                     commit.push_str("\n\n");
-                    commit.push_str(&theme::wrap_text(footer.trim(), 80));
+                    commit.push_str(&theme::wrap_text(footer.trim(), 120));
                 }
 
                 commit

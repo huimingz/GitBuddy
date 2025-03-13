@@ -70,7 +70,7 @@ Rules for Conventional Commits:
    - Subject MUST be in imperative mood ("add" not "adds" or "added")
    - Subject MUST NOT start with a capital letter
    - Subject MUST NOT end with a period
-   - Subject MUST be max 80 characters
+   - Subject MUST be max 100 characters
    - Body MUST explain both motivation and changes made
    - Breaking changes MUST be indicated in footer
 
