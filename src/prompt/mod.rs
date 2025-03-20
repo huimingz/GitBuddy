@@ -44,44 +44,59 @@ impl Prompt {
     }
 }
 
-pub const PROMPT: &str = r###"Generate {{ number }} commit messages following the Conventional Commits specification (https://www.conventionalcommits.org/).
+pub const PROMPT: &str = r###"You are a expert software developer and master of Conventional Commits.
+Generate the appropriate {{ number }} git commit messages based on the supplied git diff content, and the message must be following the Conventional Commits specification.
 
-Format for each message object:
-{
-  "type": "<type>",                      // Type of change (see rules below)
-  "scope": "<module or component name>",  // Affected component in parentheses
-  "subject": "<concise description>",     // Imperative mood, no capitalization, no period
-  "body": "<detailed explanation>",       // Why the change was made, what changed
-  "footer": "<optional footer>"           // Breaking changes, references
-}
+As an example, for the schema {"properties": {"foo": {"title": "Foo", "description": "a list of strings", "type": "array", "items": {"type": "string"}}}, "required": ["foo"]}}
+the object {"foo": ["bar", "baz"]} is a well-formatted instance of the schema. The object {"properties": {"foo": ["bar", "baz"]}} is not well-formatted.
 
-Rules for Conventional Commits:
-1. Type MUST be one of:
-   - feat: A new feature
-   - fix: A bug fix
-   - docs: Documentation only changes
-   - style: Changes that do not affect the meaning of the code
-   - refactor: A code change that neither fixes a bug nor adds a feature
-   - test: Adding missing tests or correcting existing tests
-   - chore: Changes to the build process or auxiliary tools
-   - ci: Changes to CI configuration files and scripts
+Here is the output schema:
+```json
+[
+    {
+        "type": "object",
+        "properties": {
+            "type": {
+                "type": "string",
+                "description": "Type of change",
+                "enum": [
+                    "feat",
+                    "fix",
+                    "docs",
+                    "style",
+                    "refactor",
+                    "test",
+                    "chore",
+                    "ci",
+                    "chore",
+                    "revert"
+                    "build",
+                    "perf"
+                ]
+            },
+            "scope": {
+                "type": "string",
+                "description": "Affected component, e.g. auth/view"
+            },
+            "subject": {
+                "type": "string",
+                "description": "Short summary of the change, must be in imperative mood and under 80 characters, e.g. add oauth2 authentication flow"
+            },
+            "body": {
+                "type": "string",
+                "description": "Detailed description of the change"
+            },
+            "footer": {
+                "type": "string",
+                "description": "Additional information, e.g., breaking changes"
+            }
+    }
+]
+```
 
-2. Format Requirements:
-   - Subject MUST be in imperative mood ("add" not "adds" or "added")
-   - Subject MUST NOT start with a capital letter
-   - Subject MUST NOT end with a period
-   - Subject MUST be max 100 characters
-   - Body MUST explain both motivation and changes made
-   - Breaking changes MUST be indicated in footer
+The output must be a valid JSON array of commit messages without any other text.
 
-3. Technical Requirements:
-   - Response MUST be valid JSON array with {{ number }} messages
-   - Wrap response in ```json
-   - Use \" for quotes in strings
-   - Use \n for newlines in strings
-   - No trailing commas in arrays/objects
-
-Example:
+<output_example>
 ```json
 [
   {
@@ -90,20 +105,7 @@ Example:
     "subject": "add oauth2 authentication flow",
     "body": "implement secure authentication using OAuth2 protocol\n- add login endpoint\n- integrate with external providers\n- handle token refresh",
     "footer": "BREAKING CHANGE: authentication header format changed"
-  },
-  {
-    "type": "fix",
-    "scope": "api",
-    "subject": "handle null response in user profile",
-    "body": "add null checks to prevent app crash when user profile is incomplete",
-    "footer": null
-  },
-  {
-    "type": "refactor",
-    "scope": "core",
-    "subject": "simplify error handling logic",
-    "body": "centralize error handling to reduce code duplication and improve maintainability",
-    "footer": null
   }
 ]
-```"###;
+```
+</output_example>"###;
