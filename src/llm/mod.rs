@@ -82,9 +82,32 @@ fn render_prompt(prompt: Prompt, number: u8, language: &String) -> Result<String
     let tmpl = env.get_template("prompt")?;
     let rendered = tmpl.render(context! {
         number => number,
-        language => language,
+        language => map_language(language),
     })?;
+    println!("{}", rendered);
     Ok(rendered)
+}
+
+fn map_language(lang: &String) -> &str {
+    match lang.as_str().to_lowercase().as_str() {
+        "en" => "English",
+        "zh" => "Chinese",
+        "ja" => "Japanese",
+        "ko" => "Korean",
+        "es" => "Spanish",
+        "fr" => "French",
+        "de" => "German",
+        "it" => "Italian",
+        "pt" => "Portuguese",
+        "ru" => "Russian",
+        "tr" => "Turkish",
+        "pl" => "Polish",
+        "nl" => "Dutch",
+        "sv" => "Swedish",
+        "fi" => "Finnish",
+        "hu" => "Hungarian",
+        _ => lang.as_str(),
+    }
 }
 
 pub enum Confirm<'a> {
