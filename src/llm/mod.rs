@@ -84,7 +84,6 @@ fn render_prompt(prompt: Prompt, number: u8, language: &String) -> Result<String
         number => number,
         language => map_language(language),
     })?;
-    println!("{}", rendered);
     Ok(rendered)
 }
 
