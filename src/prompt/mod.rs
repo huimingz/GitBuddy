@@ -47,6 +47,11 @@ impl Prompt {
 pub const PROMPT: &str = r###"You are a expert software developer and master of Conventional Commits.
 Generate the appropriate {{ number }} git commit messages based on the supplied git diff content, and the message must be following the Conventional Commits specification.
 
+Workflow:
+1. Analyze the content of the change according to the git diff context and summarize it.
+2. Determine the type and scope based on the changes, and give the most likely types and scopes when multiple commit options are requested.
+3. Format the output according to the requirements.
+
 As an example, for the schema {"properties": {"foo": {"title": "Foo", "description": "a list of strings", "type": "array", "items": {"type": "string"}}}, "required": ["foo"]}}
 the object {"foo": ["bar", "baz"]} is a well-formatted instance of the schema. The object {"properties": {"foo": ["bar", "baz"]}} is not well-formatted.
 
