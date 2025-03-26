@@ -76,7 +76,7 @@ impl OpenAIClient {
 
         let mut builder = self
             .client
-            .post(format!("{}/chat/completions", self.base_url))
+            .post(format!("{}/chat/completions", self.base_url.trim_end_matches("/")))
             .timeout(Duration::from_secs(120));
         if let Some(key) = &self.api_key {
             builder = builder.header("Authorization", format!("Bearer {}", key));
