@@ -9,6 +9,7 @@ pub struct CommandArgs {
     pub hint: Option<String>,
     pub number_of_commit_options: u8,
     pub reference: Option<String>,
+    pub language: String,
 }
 
 impl CommandArgs {
@@ -21,6 +22,7 @@ impl CommandArgs {
         hint: Option<String>,
         number_of_commit_options: u8,
         reference: Option<String>,
+        language: String,
     ) -> Self {
         Self {
             push,
@@ -31,6 +33,7 @@ impl CommandArgs {
             hint,
             number_of_commit_options,
             reference,
+            language,
         }
     }
 }

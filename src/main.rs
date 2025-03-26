@@ -43,6 +43,10 @@ struct Cli {
     /// the issue number or PR number, eg. #123
     #[arg(short = 'r', long = "ref")]
     reference: Option<String>,
+
+    /// human-readable language, default is English
+    #[arg(short = 'l', long = "language", default_value_t = String::from("English"))]
+    language: String,
 }
 
 #[derive(Subcommand)]
@@ -86,6 +90,7 @@ fn main() {
                 cli.hint.clone(),
                 cli.number_of_commit_options,
                 cli.reference.clone(),
+                cli.language,
             );
             ai::handler(cli.prompt, cmd_args).unwrap();
         }
@@ -108,6 +113,7 @@ fn main() {
                 cli.hint.clone(),
                 cli.number_of_commit_options,
                 cli.reference.clone(),
+                cli.language,
             );
             ai::handler(cli.prompt, cmd_args).unwrap()
         }

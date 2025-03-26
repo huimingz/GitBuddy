@@ -52,6 +52,10 @@ Workflow:
 2. Determine the type and scope based on the changes, and give the most likely types and scopes when multiple commit options are requested.
 3. Format the output according to the requirements.
 
+Constraints:
+- language: {{ language }}
+- output format: JSON
+
 As an example, for the schema {"properties": {"foo": {"title": "Foo", "description": "a list of strings", "type": "array", "items": {"type": "string"}}}, "required": ["foo"]}}
 the object {"foo": ["bar", "baz"]} is a well-formatted instance of the schema. The object {"properties": {"foo": ["bar", "baz"]}} is not well-formatted.
 

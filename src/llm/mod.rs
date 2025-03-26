@@ -49,7 +49,7 @@ pub struct LLMResult {
     pub total_tokens: i64,
 }
 
-pub fn llm_request(diff_content: &str, prompt: Prompt, args: &CommandArgs) -> Result<LLMResult> {
+pub fn llm_request(diff_content: &str, _prompt: Prompt, args: &CommandArgs) -> Result<LLMResult> {
     let config = config::get_config()?;
     let model_config = config
         .load_model(args.vendor.clone())
@@ -68,19 +68,22 @@ fn get_commit_message(
     model_option: ModelParameters,
     args: &CommandArgs,
 ) -> Result<LLMResult> {
-    let rendered_prompt = render_prompt(args.prompt, args.number_of_commit_options)?;
+    let rendered_prompt = render_prompt(args.prompt, args.number_of_commit_options, &args.language)?;
     let result = generate_git_commit_messages(diff_content, model_config, model_option, args, rendered_prompt)
         .map_err(|e| anyhow!("request failed: {:?}", e))?;
     Ok(result)
 }
 
-fn render_prompt(prompt: Prompt, number: u8) -> Result<String, Error> {
+fn render_prompt(prompt: Prompt, number: u8, language: &String) -> Result<String, Error> {
     let p = prompt.value();
 
     let mut env = Environment::new();
     env.add_template("prompt", p)?;
     let tmpl = env.get_template("prompt")?;
-    let rendered = tmpl.render(context!(number => number))?;
+    let rendered = tmpl.render(context! {
+        number => number,
+        language => language,
+    })?;
     Ok(rendered)
 }
 
