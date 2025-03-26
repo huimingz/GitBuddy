@@ -101,7 +101,7 @@ Here is the output schema:
 
 The output must be a valid JSON array of commit messages without any other text.
 
-<output_example>
+Output example:
 ```json
 [
   {
@@ -113,4 +113,4 @@ The output must be a valid JSON array of commit messages without any other text.
   }
 ]
 ```
-</output_example>"###;
+"###;
