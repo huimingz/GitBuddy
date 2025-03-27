@@ -111,30 +111,81 @@ fn print_configuration(model: &String, diff_content: &str, option: &ModelParamet
     println!("  {} Endpoint: {}\n", "🌐".bright_yellow(), url.bright_green());
 }
 fn fix_json_response(text: &str) -> String {
-    // 使用正则表达式匹配 JSON 数组部分
-    let re = Regex::new(r"\[\s*\{.*\}\s*\]").unwrap();
+    let mut buffer = String::new();
+    let mut is_closed = false;
+    let mut json_stack = Vec::new();
+    let mut is_inside_string = false;
+    let mut json_escaped = false;
+    let mut in_json = false;
 
-    if let Some(json_match) = re.find(text) {
-        let json_str = json_match.as_str();
-
-        // 清理常见的 JSON 格式问题
-        let cleaned = json_str
-            .replace("\\n", "\n") // 处理转义的换行符
-            .replace("\\\"", "\"") // 处理转义的引号
-            .replace("\\\\", "\\") // 处理转义的反斜杠
-            .replace("\\'", "'"); // 处理转义的单引号
-
-        // 处理数组末尾的多余逗号
-        let comma_fixed = Regex::new(r",(\s*\])").unwrap().replace_all(&cleaned, "$1").to_string();
-
-        // 尝试解析和重新格式化 JSON
-        if let Ok(json) = serde_json::from_str::<serde_json::Value>(&comma_fixed) {
-            return serde_json::to_string(&json).unwrap_or(comma_fixed);
+    // iter char in text
+    for c in text.chars() {
+        let mut s = c.to_string();
+        is_closed = false;
+        if is_inside_string {
+            if c == '"' && !json_escaped {
+                is_inside_string = false;
+            } else if c == '\n' && !json_escaped {
+                s = "\\n".to_string();
+            } else if c == '\\' {
+                json_escaped = true;
+            } else {
+                json_escaped = false;
+            }
+        } else {
+            if c == '"' && in_json {
+                is_inside_string = true;
+            } else if c == '{' {
+                json_stack.push('}');
+            } else if c == '[' {
+                json_stack.push(']');
+            } else if c == '}' || c == ']' {
+                if !json_stack.is_empty() && c.eq(json_stack.last().unwrap()) {
+                    json_stack.pop();
+                    if json_stack.len() == 0 {
+                        is_closed = true;
+                    }
+                }
+            }
         }
-        comma_fixed
-    } else {
-        text.to_string()
+
+        if !in_json && json_stack.len() > 0 {
+            in_json = true;
+        }
+        if in_json {
+            buffer.push_str(&s);
+        }
+
+        if is_closed {
+            break;
+        }
     }
+    buffer
+
+    // // 使用正则表达式匹配 JSON 数组部分
+    // let re = Regex::new(r"\[\s*\{.*\}\s*\]").unwrap();
+    //
+    // if let Some(json_match) = re.find(text) {
+    //     let json_str = json_match.as_str();
+    //
+    //     // 清理常见的 JSON 格式问题
+    //     let cleaned = json_str
+    //         .replace("\\n", "\n") // 处理转义的换行符
+    //         .replace("\\\"", "\"") // 处理转义的引号
+    //         .replace("\\\\", "\\") // 处理转义的反斜杠
+    //         .replace("\\'", "'"); // 处理转义的单引号
+    //
+    //     // 处理数组末尾的多余逗号
+    //     let comma_fixed = Regex::new(r",(\s*\])").unwrap().replace_all(&cleaned, "$1").to_string();
+    //
+    //     // 尝试解析和重新格式化 JSON
+    //     if let Ok(json) = serde_json::from_str::<serde_json::Value>(&comma_fixed) {
+    //         return serde_json::to_string(&json).unwrap_or(comma_fixed);
+    //     }
+    //     comma_fixed
+    // } else {
+    //     text.to_string()
+    // }
 }
 
 fn extract_json_content(text: &str) -> String {
