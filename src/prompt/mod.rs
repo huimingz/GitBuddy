@@ -56,8 +56,8 @@ Generate the appropriate {{ number }} git commit messages based on the supplied 
 
 ## Constraints
 - language of subject and body: {{ language }}
-- output schema: The output must be a valid JSON array of commit messages without any other text.
 - number of commit messages: {{ number }}
+- output schema: The output must be a valid JSON object with the following structure.
 
 ### Schema
 As an example, for the schema {"properties": {"foo": {"title": "Foo", "description": "a list of strings", "type": "array", "items": {"type": "string"}}}, "required": ["foo"]}}
