@@ -24,4 +24,11 @@ impl Message {
             content,
         }
     }
+
+    pub fn new_assistant(content: String) -> Message {
+        Message {
+            role: "assistant".to_string(),
+            content,
+        }
+    }
 }

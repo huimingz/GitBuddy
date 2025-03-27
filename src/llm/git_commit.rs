@@ -71,6 +71,7 @@ fn git_commit_prompt(diff_content: &str, hint: Option<&String>, prompt: String) 
     if let Some(p) = hint {
         messages.push(llm::Message::new_user(format!("hint: {p}")));
     }
+    messages.push(llm::Message::new_assistant("```json\n".to_string()));
     messages
 }
 
