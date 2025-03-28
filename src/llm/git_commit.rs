@@ -50,9 +50,11 @@ fn stream_chat_response(
     println!("{}", start_separator);
     for (data, _line) in client.stream_chat(messages, option)? {
         for choice in data.choices {
-            print!("{}", choice.delta.content.cyan());
-            io::stdout().flush()?; // flush to terminal, ensure each print is visible
-            output.push_str(choice.delta.content.as_str());
+            if let Some(content) = choice.delta.content {
+                print!("{}", content.cyan());
+                io::stdout().flush()?; // flush to terminal, ensure each print is visible
+                output.push_str(content.as_str());
+            }
         }
         if let Some(u) = data.usage {
             usage.total_tokens += u.total_tokens;

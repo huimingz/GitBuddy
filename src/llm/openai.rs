@@ -136,7 +136,7 @@ pub struct OpenAIStreamChoice {
 #[derive(Debug, Serialize, Deserialize, Default)]
 pub struct OpenAIChoiceDelta {
     pub role: Option<String>,
-    pub content: String,
+    pub content: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Default)]
