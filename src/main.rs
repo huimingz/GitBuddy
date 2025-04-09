@@ -36,8 +36,8 @@ struct Cli {
     #[arg(long = "hint")]
     hint: Option<String>,
 
-    /// number of commit options, default is 3
-    #[arg(short = 'n', long = "number", default_value_t = 3)]
+    /// number of commit options, default is 1
+    #[arg(short = 'n', long = "number", default_value_t = 1)]
     number_of_commit_options: u8,
 
     /// the issue number or PR number, eg. #123
