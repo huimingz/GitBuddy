@@ -17,7 +17,7 @@ pub(crate) fn generate_git_commit_messages(
     prompt: String,
 ) -> Result<LLMResult, anyhow::Error> {
     let client = OpenAIClient::new_from_config(model_config, None);
-    print_configuration(&model_config.model, diff_content, &option, &client.base_url);
+    print_configuration(&model_config.model, diff_content, &option, &client.base_url, args);
 
     let messages = git_commit_prompt(diff_content, args.hint.as_ref(), prompt);
 
@@ -82,13 +82,19 @@ fn git_commit_prompt(diff_content: &str, hint: Option<&String>, prompt: String) 
     messages
 }
 
-fn print_configuration(model: &String, diff_content: &str, option: &ModelParameters, url: &String) {
+fn print_configuration(model: &String, diff_content: &str, option: &ModelParameters, url: &String, args: &CommandArgs) {
     println!(
         "\n{} {} {}",
         "⚙️".bright_cyan(),
         "LLM Configuration".bright_cyan().bold(),
         "🔮".bright_cyan()
     );
+    println!(
+        "  {} Language: {}",
+        "🌐".bright_yellow(),
+        args.language.bright_green().bold()
+    );
+    // model
     println!("  {} Model: {}", "🚀".bright_yellow(), model.bright_green().bold());
     println!(
         "  {} Max Tokens: {}",
