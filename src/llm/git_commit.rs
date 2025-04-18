@@ -267,6 +267,7 @@ fn process_llm_response(response: String, reference: Option<&String>) -> Result<
 #[derive(Debug, Serialize, Deserialize)]
 struct CommitMessage {
     r#type: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
     scope: Option<String>,
     subject: String,
     body: Option<String>,
