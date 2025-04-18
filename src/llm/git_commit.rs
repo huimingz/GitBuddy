@@ -73,7 +73,7 @@ fn git_commit_prompt(diff_content: &str, hint: Option<&String>, prompt: String) 
         "Generate commit message for these changes. \
         If it's a new file, focus on its purpose rather than analyzing its content:\n\
         ```diff\n{diff_content}\n```\n\n\
-        Output should be start with '```json\n[' and end with ']\n```'.\n"
+        Output should be only json format, and without comments and explanations.\n"
     )));
     if let Some(p) = hint {
         messages.push(llm::Message::new_user(format!("hint: {p}")));
