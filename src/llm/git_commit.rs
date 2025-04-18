@@ -69,11 +69,16 @@ fn stream_chat_response(
 fn git_commit_prompt(diff_content: &str, hint: Option<&String>, prompt: String) -> Vec<llm::Message> {
     let mut messages = Vec::new();
     messages.push(llm::Message::new_system(prompt));
-    messages.push(llm::Message::new_user(format!("Generate commit message for these changes. If it's a new file, focus on its purpose rather than analyzing its content:\n```diff\n{diff_content}\n```")));
+    messages.push(llm::Message::new_user(format!(
+        "Generate commit message for these changes. \
+        If it's a new file, focus on its purpose rather than analyzing its content:\n\
+        ```diff\n{diff_content}\n```\n\n\
+        Output should be start with '```json\n[' and end with ']\n```'.\n"
+    )));
     if let Some(p) = hint {
         messages.push(llm::Message::new_user(format!("hint: {p}")));
     }
-    messages.push(llm::Message::new_assistant("```json\n".to_string()));
+    // messages.push(llm::Message::new_assistant("```json\n".to_string()));
     messages
 }
 
