@@ -49,15 +49,14 @@ pub const PROMPT: &str = r###"
 You are a expert software developer and master of Conventional Commits.
 Generate the appropriate {{ number }} git commit messages based on the supplied git diff content, and the message must be following the Conventional Commits specification.
 
-## Workflow
-1. Analyze the content of the change according to the git diff context and summarize it.
-2. Determine the type and scope based on the changes, and give the most likely types and scopes when multiple commit options are requested.
-3. Format the output according to the constraints.
-
 ## Constraints (Must follow)
-- language of subject and body: {{ language }}
+- language of commit subject and body: {{ language }}
 - number of commit messages: {{ number }}
-- output schema: The output must be a valid JSON object with the following structure, without any comments or explanations.
+
+## Workflow
+1. Analyze the content of the change according to the git diff context.
+2. Determine the type and scope based on the changes, and give the most likely types and scopes when multiple commit options are requested.
+3. Output the commit messages in the format of Conventional Commits based on the following json schema.
 
 ### Schema
 As an example, for the schema {"properties": {"foo": {"title": "Foo", "description": "a list of strings", "type": "array", "items": {"type": "string"}}}, "required": ["foo"]}}
