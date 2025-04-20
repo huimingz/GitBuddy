@@ -54,10 +54,10 @@ Generate the appropriate {{ number }} git commit messages based on the supplied 
 2. Determine the type and scope based on the changes, and give the most likely types and scopes when multiple commit options are requested.
 3. Format the output according to the constraints.
 
-## Constraints
+## Constraints (Must follow)
 - language of subject and body: {{ language }}
 - number of commit messages: {{ number }}
-- output schema: The output must be a valid JSON object with the following structure.
+- output schema: The output must be a valid JSON object with the following structure, without any other text. if number is 1, the output must be a array with one element.
 
 ### Schema
 As an example, for the schema {"properties": {"foo": {"title": "Foo", "description": "a list of strings", "type": "array", "items": {"type": "string"}}}, "required": ["foo"]}}
@@ -65,27 +65,18 @@ the object {"foo": ["bar", "baz"]} is a well-formatted instance of the schema. T
 
 Here is the output schema:
 ```json
-[
-    {
+{
+    "title": "Conventional Commits",
+    "description": "Generate conventional commit messages",
+    "type": "array",
+    "items": {
         "type": "object",
+        "description": "Conventional commit message",
         "properties": {
             "type": {
                 "type": "string",
-                "description": "Type of change",
-                "enum": [
-                    "feat",
-                    "fix",
-                    "docs",
-                    "style",
-                    "refactor",
-                    "test",
-                    "chore",
-                    "ci",
-                    "chore",
-                    "revert"
-                    "build",
-                    "perf"
-                ]
+                "description": "Type of current commit",
+                "enum": ["feat", "fix", "docs", "style", "refactor", "test", "chore", "ci", "revert", "build", "perf"]
             },
             "scope": {
                 "type": "string",
@@ -103,8 +94,12 @@ Here is the output schema:
                 "type": "string",
                 "description": "Additional information, e.g., breaking changes"
             }
-    }
-]
+        },
+        "required": ["type", "subject"]
+    },
+    "minItems": {{ number }},
+    "maxItems": {{ number }}
+}
 ```
 
 The output must be a valid JSON array of commit messages without any other text.
