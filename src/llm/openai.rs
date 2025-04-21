@@ -69,7 +69,7 @@ impl OpenAIClient {
                 "top_k": option.top_k,
             },
             "options": option,
-            "keep_alive": "2h",
+            "keep_alive": "120m",
             "max_tokens": option.max_tokens,
             "stream": true,
         });
