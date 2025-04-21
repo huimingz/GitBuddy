@@ -149,6 +149,11 @@ fn fix_json_response(text: &str) -> String {
             if c == '"' && in_json {
                 is_inside_string = true;
             } else if c == '{' {
+                if json_stack.len() == 0 {
+                    json_stack.push(']');
+                    buffer.push_str("[");
+                }
+
                 json_stack.push('}');
             } else if c == '[' {
                 json_stack.push(']');
@@ -172,6 +177,9 @@ fn fix_json_response(text: &str) -> String {
         if is_closed {
             break;
         }
+    }
+    for i in 0..json_stack.len() {
+        buffer.push_str(&json_stack[json_stack.len() - i - 1].to_string());
     }
     buffer
 
